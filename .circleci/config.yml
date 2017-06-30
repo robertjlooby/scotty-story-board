@@ -1,0 +1,37 @@
+defaults: &defaults
+  working_directory: ~/scotty-story-board
+  docker:
+    - image: fpco/stack-build:lts-8.20
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-stack-cache-{{ checksum "stack.yaml" }}-{{ checksum "scotty-story-board.cabal" }}
+      - run: stack setup
+      - run: stack build --only-dependencies
+      - run: stack build --test --no-run-tests
+      - save_cache:
+          key: v1-stack-cache-{{ checksum "stack.yaml" }}-{{ checksum "scotty-story-board.cabal" }}
+          paths:
+            - ~/.stack
+            - .stack-work
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-stack-cache-{{ checksum "stack.yaml" }}-{{ checksum "scotty-story-board.cabal" }}
+      - run: stack test
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
