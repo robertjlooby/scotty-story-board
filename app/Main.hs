@@ -1,6 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import Lib
+import App (app)
+import qualified Web.Scotty as S
 
 main :: IO ()
-main = someFunc
+main = do
+  S.scotty 3000 app

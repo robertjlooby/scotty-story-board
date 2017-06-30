@@ -1,2 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module Main where
+
+import qualified AppSpec
+import Test.Hspec (Spec, describe, hspec, it)
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec AppSpec.spec
