@@ -3,10 +3,13 @@
 module Index (index) where
 
 import Text.Blaze.Html5 as H
+import Text.Blaze.Html5.Attributes
 
 index :: Html
 index = docTypeHtml $ do
   H.head $ do
-    title "Scotty Story Board"
+    link ! rel "stylesheet" ! href "normalize.css"
+    link ! rel "stylesheet" ! href "skeleton.css"
+    H.title "Scotty Story Board"
   body $ do
     p "hello"
