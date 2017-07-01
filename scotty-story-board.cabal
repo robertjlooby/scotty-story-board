@@ -21,6 +21,7 @@ executable scotty-story-board
   build-depends:       base
                      , blaze-html
                      , scotty
+                     , wai-middleware-static
                      , wai-extra
   default-language:    Haskell2010
 
