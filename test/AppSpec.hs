@@ -10,5 +10,5 @@ import qualified Web.Scotty as S
 spec :: Spec
 spec = with (S.scottyApp app) $ do
   describe "GET /" $ do
-    it "responds with 200 / 'hello'" $ do
-      get "/" `shouldRespondWith` "hello" { matchStatus = 200 }
+    it "responds with 200" $ do
+      get "/" `shouldRespondWith` 200
