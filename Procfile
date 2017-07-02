@@ -1,1 +1,1 @@
-web: scotty-story-board
+web: migrate && scotty-story-board
