@@ -23,7 +23,7 @@ executable migrate
 
 executable scotty-story-board
   hs-source-dirs:      app
-                     , app/view
+                     , app/views
   main-is:             Main.hs
   other-modules:       App
                      , Index
@@ -39,7 +39,7 @@ test-suite test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
                      , app
-                     , app/view
+                     , app/views
   main-is:             Spec.hs
   other-modules:       App
                      , AppSpec
