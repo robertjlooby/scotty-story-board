@@ -8,5 +8,5 @@ import qualified Web.Scotty as S
 
 app :: S.ScottyM ()
 app = do
-  S.get "/" $ do
-    S.html $ renderHtml Index.index
+    S.get "/" $ do
+        S.html $ renderHtml Index.index

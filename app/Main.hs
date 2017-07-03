@@ -10,8 +10,8 @@ import qualified Web.Scotty as S
 
 main :: IO ()
 main = do
-  port <- read <$> getEnv "PORT"
-  S.scotty port $ do
-    S.middleware logStdout
-    S.middleware $ staticPolicy (addBase "app/static")
-    app
+    port <- read <$> getEnv "PORT"
+    S.scotty port $ do
+        S.middleware logStdout
+        S.middleware $ staticPolicy (addBase "app/static")
+        app
