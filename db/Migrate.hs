@@ -7,8 +7,8 @@ import System.Environment (getEnv)
 
 main :: IO (MigrationResult String)
 main = do
-  dbUrl <- BS8.pack <$> getEnv "DATABASE_URL"
-  conn <- connectPostgreSQL dbUrl
-  withTransaction conn $ do
-    _ <- runMigration $ MigrationContext MigrationInitialization True conn
-    runMigration $ MigrationContext (MigrationDirectory "db/migrations") True conn
+    dbUrl <- BS8.pack <$> getEnv "DATABASE_URL"
+    conn <- connectPostgreSQL dbUrl
+    withTransaction conn $ do
+        _ <- runMigration $ MigrationContext MigrationInitialization True conn
+        runMigration $ MigrationContext (MigrationDirectory "db/migrations") True conn
