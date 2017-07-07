@@ -15,3 +15,10 @@ spec conn = describe "Project" $ do
     it "returns nothing if id not found" $ do
         found <- P.find conn (P.ProjectId 0)
         found `shouldBe` Nothing
+    it "can find by name" $ do
+        _ <- P.create conn "project" "description"
+        found <- P.findByName conn "project"
+        found `shouldBe` (Just $ P.Project "project" "description")
+    it "returns nothing if name not found" $ do
+        found <- P.findByName conn "project"
+        found `shouldBe` Nothing
