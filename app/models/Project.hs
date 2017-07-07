@@ -28,3 +28,10 @@ find conn (ProjectId projectId) = do
   case project of
     [(name, description)] -> return $ Just $ Project name description
     _ -> return Nothing
+
+findByName :: Connection -> Text -> IO (Maybe Project)
+findByName conn projectName = do
+  project <- query conn "SELECT name, description FROM projects WHERE name = ?" $ Only projectName
+  case project of
+    [(name, description)] -> return $ Just $ Project name description
+    _ -> return Nothing
