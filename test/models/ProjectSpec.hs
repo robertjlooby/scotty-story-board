@@ -22,3 +22,8 @@ spec conn = describe "Project" $ do
     it "returns nothing if name not found" $ do
         found <- P.findByName conn "project"
         found `shouldBe` Nothing
+    it "can find all projects" $ do
+        _ <- P.create conn "project1" ""
+        _ <- P.create conn "project2" ""
+        found <- P.findAll conn
+        found `shouldBe` [P.Project "project1" "", P.Project "project2" ""]
