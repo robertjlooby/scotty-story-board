@@ -3,12 +3,21 @@
 module AppSpec (spec) where
 
 import App (app)
-import Test.Hspec (Spec, describe, it)
-import Test.Hspec.Wai (get, matchStatus, shouldRespondWith, with)
+import Database.PostgreSQL.Simple (Connection)
+import qualified Project as P
+import Test.Hspec (Spec, describe, it, shouldBe)
+import Test.Hspec.Wai (get, liftIO, postHtmlForm, shouldRespondWith, with)
 import qualified Web.Scotty as S
 
-spec :: Spec
-spec = with (S.scottyApp app) $ do
+spec :: Connection -> Spec
+spec conn = with (S.scottyApp $ app conn) $ do
     describe "GET /" $ do
         it "responds with 200" $ do
             get "/" `shouldRespondWith` 200
+    describe "POST /projects" $ do
+        it "responds with a 302" $ do
+            postHtmlForm "/projects" [("name", "project"), ("description", "the project")] `shouldRespondWith` 302
+        it "creates a project" $ do
+            _ <- postHtmlForm "/projects" [("name", "project"), ("description", "the project")]
+            found <- liftIO $ P.findByName conn "project"
+            liftIO $ found `shouldBe` Just (P.Project "project" "the project")
