@@ -16,6 +16,8 @@ app conn = do
     S.get "/projects" $ do
         projects <- S.liftAndCatchIO $ P.findAll conn
         S.html $ renderHtml $ Views.Project.index projects
+    S.get "/projects/new" $ do
+        S.html $ renderHtml $ Views.Project.new
     S.post "/projects" $ do
         name <- S.param "name"
         description <- S.param "description"
