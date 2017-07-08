@@ -2,7 +2,7 @@
 
 module Views.Project (index) where
 
-import qualified Project as P
+import qualified Models.Project as P
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes
 

@@ -28,7 +28,7 @@ executable scotty-story-board
                      , app/views
   main-is:             Main.hs
   other-modules:       App
-                     , Project
+                     , Models.Project
                      , SQLExceptions
                      , Views.Index
                      , Views.Project
@@ -54,7 +54,7 @@ test-suite test
   main-is:             Spec.hs
   other-modules:       App
                      , AppSpec
-                     , Project
+                     , Models.Project
                      , ProjectSpec
                      , SQLExceptions
                      , Views.Index

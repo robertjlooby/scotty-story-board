@@ -3,9 +3,9 @@
 module App where
 
 import Database.PostgreSQL.Simple (Connection)
+import qualified Models.Project as P
 import qualified Views.Index
 import qualified Views.Project
-import qualified Project as P
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Web.Scotty as S
 
