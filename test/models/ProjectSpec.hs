@@ -3,7 +3,7 @@
 module ProjectSpec (spec) where
 
 import Database.PostgreSQL.Simple (Connection)
-import Project as P
+import Models.Project as P
 import Test.Hspec (Spec, describe, it, shouldBe)
 
 spec :: Connection -> Spec

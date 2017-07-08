@@ -4,7 +4,7 @@ module AppSpec (spec) where
 
 import App (app)
 import Database.PostgreSQL.Simple (Connection)
-import qualified Project as P
+import qualified Models.Project as P
 import Test.Hspec (Spec, describe, it, shouldBe)
 import Test.Hspec.Wai (get, liftIO, postHtmlForm, shouldRespondWith, with)
 import qualified Web.Scotty as S
