@@ -31,6 +31,7 @@ executable scotty-story-board
                      , Project
                      , SQLExceptions
                      , Views.Index
+                     , Views.Project
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , blaze-html
@@ -57,6 +58,7 @@ test-suite test
                      , ProjectSpec
                      , SQLExceptions
                      , Views.Index
+                     , Views.Project
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , blaze-html
