@@ -28,9 +28,9 @@ executable scotty-story-board
                      , app/views
   main-is:             Main.hs
   other-modules:       App
-                     , Index
                      , Project
                      , SQLExceptions
+                     , Views.Index
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , blaze-html
@@ -53,10 +53,10 @@ test-suite test
   main-is:             Spec.hs
   other-modules:       App
                      , AppSpec
-                     , Index
                      , Project
                      , ProjectSpec
                      , SQLExceptions
+                     , Views.Index
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , blaze-html
