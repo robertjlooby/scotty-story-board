@@ -17,6 +17,9 @@ spec conn = with (S.scottyApp $ app conn) $ do
     describe "GET /projects" $ do
         it "responds with a 200" $ do
             get "/projects" `shouldRespondWith` 200
+    describe "GET /projects/new" $ do
+        it "responds with a 200" $ do
+            get "/projects/new" `shouldRespondWith` 200
     describe "POST /projects" $ do
         it "responds with a 302" $ do
             postHtmlForm "/projects" [("name", "project"), ("description", "the project")] `shouldRespondWith` 302
