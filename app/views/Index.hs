@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Index (index) where
+module Views.Index (index) where
 
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes
