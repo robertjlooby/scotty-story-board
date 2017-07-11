@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Models.Project where
+module Project where
 
 import Control.Exception (throwIO)
 import Data.Text (Text)
