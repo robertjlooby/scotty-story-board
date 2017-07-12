@@ -26,4 +26,5 @@ spec conn = with (S.scottyApp $ app conn) $ do
         it "creates a project" $ do
             _ <- postHtmlForm "/projects" [("name", "project"), ("description", "the project")]
             found <- liftIO $ P.findByName conn "project"
-            liftIO $ found `shouldBe` Just (P.Project "project" "the project")
+            liftIO $ P.name <$> found `shouldBe` Just "project"
+            liftIO $ P.description <$> found `shouldBe` Just "the project"
