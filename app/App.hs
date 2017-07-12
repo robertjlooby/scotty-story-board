@@ -21,7 +21,7 @@ app conn = do
       id_ <- S.param "id"
       project <- S.liftAndCatchIO $ P.find conn (P.ProjectId id_)
       case project of
-        Just p -> S.html $ renderHtml $ ProjectViews.show p
+        Just p -> S.html $ renderHtml $ ProjectViews.show_ p
         Nothing -> S.status notFound404
     S.get "/projects/new" $ do
         S.html $ renderHtml $ ProjectViews.new

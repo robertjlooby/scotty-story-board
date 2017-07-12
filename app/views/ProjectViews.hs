@@ -14,10 +14,14 @@ index projects = docTypeHtml $ do
         link ! rel "stylesheet" ! href "skeleton.css"
         H.title "Scotty Story Board"
     body $ do
-      ul $ mapM_ (li . toHtml . P.name) projects
+      ul $ mapM_ showProject projects
+  where
+    showProject project = do
+      let (P.ProjectId id_) = P.id_ project
+      (li . (a ! href ("/projects/" <> (stringValue (show id_)))) . toHtml . P.name) project
 
-show :: P.Project -> Html
-show project = docTypeHtml $ do
+show_ :: P.Project -> Html
+show_ project = docTypeHtml $ do
     H.head $ do
         link ! rel "stylesheet" ! href "normalize.css"
         link ! rel "stylesheet" ! href "skeleton.css"
@@ -26,6 +30,7 @@ show project = docTypeHtml $ do
       ul $ do
         li . toHtml $ "Name: " <> P.name project
         li . toHtml $ "Description: " <> P.description project
+        li . (a ! href "/projects") $ "All"
 
 new :: Html
 new = docTypeHtml $ do
