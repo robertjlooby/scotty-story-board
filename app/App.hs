@@ -4,6 +4,7 @@ module App where
 
 import Database.PostgreSQL.Simple (Connection)
 import qualified IndexViews
+import Network.HTTP.Types.Status (notFound404)
 import qualified Project as P
 import qualified ProjectViews
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -16,6 +17,12 @@ app conn = do
     S.get "/projects" $ do
         projects <- S.liftAndCatchIO $ P.findAll conn
         S.html $ renderHtml $ ProjectViews.index projects
+    S.get "/projects/:id" $ do
+      id_ <- S.param "id"
+      project <- S.liftAndCatchIO $ P.find conn (P.ProjectId id_)
+      case project of
+        Just p -> S.html $ renderHtml $ ProjectViews.show p
+        Nothing -> S.status notFound404
     S.get "/projects/new" $ do
         S.html $ renderHtml $ ProjectViews.new
     S.post "/projects" $ do
