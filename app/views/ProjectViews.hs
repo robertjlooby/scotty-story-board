@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ProjectViews (index, new) where
+module ProjectViews where
 
+import Data.Monoid ((<>))
 import qualified Project as P
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes
@@ -14,6 +15,17 @@ index projects = docTypeHtml $ do
         H.title "Scotty Story Board"
     body $ do
       ul $ mapM_ (li . toHtml . P.name) projects
+
+show :: P.Project -> Html
+show project = docTypeHtml $ do
+    H.head $ do
+        link ! rel "stylesheet" ! href "normalize.css"
+        link ! rel "stylesheet" ! href "skeleton.css"
+        H.title "Scotty Story Board"
+    body $ do
+      ul $ do
+        li . toHtml $ "Name: " <> P.name project
+        li . toHtml $ "Description: " <> P.description project
 
 new :: Html
 new = docTypeHtml $ do
