@@ -2,11 +2,9 @@
 
 module Project where
 
-import Control.Exception (throwIO)
 import Data.Text (Text)
 import Database.PostgreSQL.Simple (Connection, FromRow, Only(..), query, query_)
 import Database.PostgreSQL.Simple.FromRow (field, fromRow)
-import SQLExceptions (DuplicateData(..))
 
 newtype ProjectId = ProjectId Int deriving (Eq, Ord, Show)
 
@@ -23,10 +21,8 @@ instance FromRow Project where
 
 create :: Connection -> Text -> Text -> IO ProjectId
 create conn name' description' = do
-  ids <- query conn "INSERT INTO projects (name, description) VALUES (?, ?) RETURNING id" (name', description')
-  case ids of
-    [projectId] -> return projectId
-    _           -> throwIO DuplicateData
+  [projectId] <- query conn "INSERT INTO projects (name, description) VALUES (?, ?) RETURNING id" (name', description')
+  return projectId
 
 find :: Connection -> ProjectId -> IO (Maybe Project)
 find conn (ProjectId projectId) = do
