@@ -27,3 +27,8 @@ spec conn = describe "Project" $ do
         project2Id <- P.create conn "project2" ""
         found <- P.findAll conn
         found `shouldBe` [P.Project project1Id "project1" "", P.Project project2Id "project2" ""]
+    it "can delete by id" $ do
+        projectId <- P.create conn "project" "description"
+        _ <- P.delete conn projectId
+        found <- P.find conn projectId
+        found `shouldBe` Nothing

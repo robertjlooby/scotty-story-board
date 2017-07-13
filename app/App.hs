@@ -23,6 +23,10 @@ app conn = do
       case project of
         Just p -> S.html $ renderHtml $ ProjectViews.show_ p
         Nothing -> S.status notFound404
+    S.delete "/projects/:id" $ do
+        id_ <- S.param "id"
+        _ <- S.liftAndCatchIO $ P.delete conn (P.ProjectId id_)
+        S.redirect "/projects"
     S.get "/projects/new" $ do
         S.html $ renderHtml $ ProjectViews.new
     S.post "/projects" $ do
