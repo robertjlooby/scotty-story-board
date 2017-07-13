@@ -18,7 +18,7 @@ index projects = docTypeHtml $ do
   where
     showProject project = do
       let (P.ProjectId id_) = P.id_ project
-      (li . (a ! href ("/projects/" <> (stringValue (show id_)))) . toHtml . P.name) project
+      (li . (a ! href ("/projects/" <> toValue id_)) . toHtml . P.name) project
 
 show_ :: P.Project -> Html
 show_ project = docTypeHtml $ do
