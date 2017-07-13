@@ -4,11 +4,12 @@
 module Project where
 
 import Data.Text (Text)
-import Database.PostgreSQL.Simple (Connection, FromRow, Only(..), query, query_)
+import Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query, query_)
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.FromRow (field, fromRow)
+import Database.PostgreSQL.Simple.ToField (ToField)
 
-newtype ProjectId = ProjectId Int deriving (Eq, FromField, Ord, Show)
+newtype ProjectId = ProjectId Int deriving (Eq, FromField, Ord, Show, ToField)
 
 instance FromRow ProjectId where
   fromRow = ProjectId <$> field
@@ -44,3 +45,8 @@ findByName conn projectName = do
 findAll :: Connection -> IO [Project]
 findAll conn =
   query_ conn "SELECT id, name, description FROM projects"
+
+delete :: Connection -> ProjectId -> IO ()
+delete conn projectId = do
+  _ <- execute conn "DELETE FROM projects WHERE id = ?" (Only projectId)
+  return ()
