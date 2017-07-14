@@ -14,10 +14,10 @@ import qualified Web.Scotty as S
 
 getSSLMiddleware :: IO (S.ScottyM ())
 getSSLMiddleware = do
-  environment <- lookupEnv "APP_ENV"
-  if environment == Just "production"
-     then return $ S.middleware forceSSL
-     else return $ return ()
+    environment <- lookupEnv "APP_ENV"
+    if environment == Just "production"
+        then return $ S.middleware forceSSL
+        else return $ return ()
 
 main :: IO ()
 main = do
