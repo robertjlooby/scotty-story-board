@@ -30,6 +30,11 @@ show_ project = docTypeHtml $ do
       ul $ do
         li . toHtml $ "Name: " <> P.name project
         li . toHtml $ "Description: " <> P.description project
+        li $ do
+            let (P.ProjectId id_) = P.id_ project
+            H.form ! action ("/projects/" <> toValue id_) ! method "POST" $ do
+                input ! type_ "hidden" ! name "_method" ! value "DELETE"
+                input ! type_ "submit" ! value "Delete"
         li . (a ! href "/projects") $ "All"
 
 new :: Html
