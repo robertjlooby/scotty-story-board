@@ -12,4 +12,5 @@ index = docTypeHtml $ do
         link ! rel "stylesheet" ! href "skeleton.css"
         H.title "Scotty Story Board"
     body $ do
-        p "hello"
+        p "Hello!"
+        p . (a ! href "/projects") $ "All Projects"

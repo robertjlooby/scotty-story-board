@@ -33,4 +33,4 @@ app conn = do
         name <- S.param "name"
         description <- S.param "description"
         _ <- S.liftAndCatchIO $ P.create conn name description
-        S.redirect "/"
+        S.redirect "/projects"

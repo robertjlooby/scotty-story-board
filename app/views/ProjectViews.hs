@@ -14,7 +14,9 @@ index projects = docTypeHtml $ do
         link ! rel "stylesheet" ! href "skeleton.css"
         H.title "Scotty Story Board"
     body $ do
-      ul $ mapM_ showProject projects
+      ul $ do
+          mapM_ showProject projects
+          li . (a ! href "/projects/new") $ "New"
   where
     showProject project = do
       let (P.ProjectId id_) = P.id_ project
