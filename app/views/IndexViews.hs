@@ -8,5 +8,8 @@ import Text.Blaze.Html5.Attributes
 
 index :: Html
 index = Layouts.app $ do
-    p "Hello!"
-    p . (a ! href "/projects") $ "All Projects"
+    H.div ! class_ "container" $ do
+        H.div ! class_ "row" $ do
+            H.div ! class_ "six columns" $ do
+                h2 "Hello!"
+                p . (a ! href "/projects") $ "All Projects"
