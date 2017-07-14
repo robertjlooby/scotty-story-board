@@ -42,6 +42,11 @@ findByName conn projectName = do
     [proj] -> return $ Just proj
     _      -> return Nothing
 
+update :: Connection -> Project -> IO ()
+update conn project = do
+    _ <- execute conn "UPDATE projects SET name = ?, description = ? WHERE id = ?" (name project, description project, id_ project)
+    return ()
+
 findAll :: Connection -> IO [Project]
 findAll conn =
   query_ conn "SELECT id, name, description FROM projects"
