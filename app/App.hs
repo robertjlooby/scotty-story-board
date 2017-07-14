@@ -14,21 +14,33 @@ app :: Connection -> S.ScottyM ()
 app conn = do
     S.get "/" $ do
         S.html $ renderHtml IndexViews.index
+
     S.get "/projects" $ do
         projects <- S.liftAndCatchIO $ P.findAll conn
         S.html $ renderHtml $ ProjectViews.index projects
+
     S.get "/projects/:id" $ do
-      id_ <- S.param "id"
-      project <- S.liftAndCatchIO $ P.find conn (P.ProjectId id_)
-      case project of
-        Just p -> S.html $ renderHtml $ ProjectViews.show_ p
-        Nothing -> S.status notFound404
+        id_ <- S.param "id"
+        project <- S.liftAndCatchIO $ P.find conn (P.ProjectId id_)
+        case project of
+            Just p -> S.html $ renderHtml $ ProjectViews.show_ p
+            Nothing -> S.status notFound404
+
+    S.put "/projects/:id" $ do
+        id_ <- S.param "id"
+        name <- S.param "name"
+        description <- S.param "description"
+        _ <- S.liftAndCatchIO $ P.update conn $ P.Project (P.ProjectId id_) name description
+        S.redirect "/projects"
+
     S.delete "/projects/:id" $ do
         id_ <- S.param "id"
         _ <- S.liftAndCatchIO $ P.delete conn (P.ProjectId id_)
         S.redirect "/projects"
+
     S.get "/projects/new" $ do
         S.html $ renderHtml $ ProjectViews.new
+
     S.post "/projects" $ do
         name <- S.param "name"
         description <- S.param "description"
