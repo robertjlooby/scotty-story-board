@@ -2,6 +2,7 @@
 
 module App where
 
+import qualified Data.Text.Lazy as T
 import Database.PostgreSQL.Simple (Connection)
 import qualified IndexViews
 import Network.HTTP.Types.Status (notFound404)
@@ -26,12 +27,19 @@ app conn = do
             Just p -> S.html $ renderHtml $ ProjectViews.show_ p
             Nothing -> S.status notFound404
 
+    S.get "/projects/:id/edit" $ do
+        id_ <- S.param "id"
+        project <- S.liftAndCatchIO $ P.find conn (P.ProjectId id_)
+        case project of
+            Just p -> S.html $ renderHtml $ ProjectViews.edit p
+            Nothing -> S.status notFound404
+
     S.put "/projects/:id" $ do
         id_ <- S.param "id"
         name <- S.param "name"
         description <- S.param "description"
         _ <- S.liftAndCatchIO $ P.update conn $ P.Project (P.ProjectId id_) name description
-        S.redirect "/projects"
+        S.redirect $ T.pack ("/projects/" ++ show id_)
 
     S.delete "/projects/:id" $ do
         id_ <- S.param "id"

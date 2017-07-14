@@ -34,6 +34,14 @@ spec conn = with (S.scottyApp $ app conn) $ do
         it "responds with a 404 for project not found" $ do
             get "/projects/0" `shouldRespondWith` 404
 
+    describe "GET /projects/:id/edit" $ do
+        it "responds with a 200 for a project" $ do
+            (P.ProjectId projectId) <- liftIO $ P.create conn "project" "description"
+            let url = BS.pack $ "/projects/" <> show projectId <> "/edit"
+            get url `shouldRespondWith` 200
+        it "responds with a 404 for project not found" $ do
+            get "/projects/0/edit" `shouldRespondWith` 404
+
     describe "POST /projects" $ do
         it "responds with a 302" $ do
             postHtmlForm "/projects" [("name", "project"), ("description", "the project")] `shouldRespondWith` 302
