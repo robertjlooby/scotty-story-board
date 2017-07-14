@@ -28,6 +28,7 @@ executable scotty-story-board
   main-is:             Main.hs
   other-modules:       App
                      , IndexViews
+                     , Layouts
                      , Project
                      , ProjectViews
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
@@ -53,6 +54,7 @@ test-suite test
   other-modules:       App
                      , AppSpec
                      , IndexViews
+                     , Layouts
                      , Project
                      , ProjectSpec
                      , ProjectViews

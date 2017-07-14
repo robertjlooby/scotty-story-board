@@ -3,33 +3,24 @@
 module ProjectViews where
 
 import Data.Monoid ((<>))
+import qualified Layouts
 import qualified Project as P
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes
 
 index :: [P.Project] -> Html
-index projects = docTypeHtml $ do
-    H.head $ do
-        link ! rel "stylesheet" ! href "normalize.css"
-        link ! rel "stylesheet" ! href "skeleton.css"
-        H.title "Scotty Story Board"
-    body $ do
-      ul $ do
-          mapM_ showProject projects
-          li . (a ! href "/projects/new") $ "New"
+index projects = Layouts.app $ do
+    ul $ do
+        mapM_ showProject projects
+        li . (a ! href "/projects/new") $ "New"
   where
     showProject project = do
-      let (P.ProjectId id_) = P.id_ project
-      (li . (a ! href ("/projects/" <> toValue id_)) . toHtml . P.name) project
+        let (P.ProjectId id_) = P.id_ project
+        (li . (a ! href ("/projects/" <> toValue id_)) . toHtml . P.name) project
 
 show_ :: P.Project -> Html
-show_ project = docTypeHtml $ do
-    H.head $ do
-        link ! rel "stylesheet" ! href "normalize.css"
-        link ! rel "stylesheet" ! href "skeleton.css"
-        H.title "Scotty Story Board"
-    body $ do
-      ul $ do
+show_ project = Layouts.app $ do
+    ul $ do
         li . toHtml $ "Name: " <> P.name project
         li . toHtml $ "Description: " <> P.description project
         li $ do
@@ -40,13 +31,8 @@ show_ project = docTypeHtml $ do
         li . (a ! href "/projects") $ "All"
 
 new :: Html
-new = docTypeHtml $ do
-    H.head $ do
-        link ! rel "stylesheet" ! href "normalize.css"
-        link ! rel "stylesheet" ! href "skeleton.css"
-        H.title "Scotty Story Board"
-    body $ do
-      H.form ! action "/projects" ! method "POST" $ do
+new = Layouts.app $ do
+    H.form ! action "/projects" ! method "POST" $ do
         H.label $ toHtml ("Name: " :: String)
         input ! type_ "text" ! name "name"
         H.label $ toHtml ("Description: " :: String)
