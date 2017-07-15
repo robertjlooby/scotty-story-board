@@ -39,6 +39,8 @@ executable web
                      , postgresql-simple
                      , scotty
                      , text
+                     , unordered-containers
+                     , wai-middleware-auth
                      , wai-middleware-static
                      , wai-extra
   default-language:    Haskell2010
