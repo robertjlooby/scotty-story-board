@@ -12,4 +12,5 @@ index = Layouts.app $ do
         H.div ! class_ "row" $ do
             H.div ! class_ "six columns" $ do
                 h2 "Hello!"
+                p . (a ! href "/login") $ "Login"
                 p . (a ! href "/projects") $ "All Projects"

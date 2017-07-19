@@ -14,10 +14,6 @@ import qualified Web.Scotty as S
 
 spec :: Connection -> Spec
 spec conn = with (S.scottyApp $ app conn) $ do
-    describe "GET /" $ do
-        it "responds with 200" $ do
-            get "/" `shouldRespondWith` 200
-
     describe "GET /projects" $ do
         it "responds with a 200" $ do
             get "/projects" `shouldRespondWith` 200
