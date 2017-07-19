@@ -2,31 +2,34 @@
 
 module Main where
 
-import App (app)
+import qualified App
+import AppContext (getContext, environment, port)
+import qualified Auth
 import qualified Data.ByteString.Char8 as BS8
 import Database.PostgreSQL.Simple (connectPostgreSQL)
+import qualified Index
+import Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import Network.Wai.Middleware.ForceSSL (forceSSL)
 import Network.Wai.Middleware.MethodOverridePost (methodOverridePost)
 import Network.Wai.Middleware.RequestLogger (logStdout)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
-import System.Environment (getEnv, lookupEnv)
+import System.Environment (getEnv)
 import qualified Web.Scotty as S
 
-getSSLMiddleware :: IO (S.ScottyM ())
-getSSLMiddleware = do
-    environment <- lookupEnv "APP_ENV"
-    if environment == Just "production"
-        then return $ S.middleware forceSSL
-        else return $ return ()
+sslMiddleware :: String -> S.ScottyM ()
+sslMiddleware "production" = S.middleware forceSSL
+sslMiddleware _ = return ()
 
 main :: IO ()
 main = do
+    appContext <- getContext
     conn <- BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL
-    port <- read <$> getEnv "PORT"
-    sslMiddleware <- getSSLMiddleware
-    S.scotty port $ do
+    mgr <- newManager tlsManagerSettings
+    S.scotty (port appContext) $ do
         S.middleware methodOverridePost
         S.middleware logStdout
-        sslMiddleware
+        sslMiddleware (environment appContext)
         S.middleware $ staticPolicy (addBase "app/static")
-        app conn
+        Index.app
+        Auth.app conn mgr appContext
+        App.app conn

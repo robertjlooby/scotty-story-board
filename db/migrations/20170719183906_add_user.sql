@@ -1,0 +1,6 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX ON users (name);

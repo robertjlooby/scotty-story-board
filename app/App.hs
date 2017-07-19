@@ -4,7 +4,6 @@ module App where
 
 import qualified Data.Text.Lazy as T
 import Database.PostgreSQL.Simple (Connection)
-import qualified IndexViews
 import Network.HTTP.Types.Status (notFound404)
 import qualified Project as P
 import qualified ProjectViews
@@ -13,9 +12,6 @@ import qualified Web.Scotty as S
 
 app :: Connection -> S.ScottyM ()
 app conn = do
-    S.get "/" $ do
-        S.html $ renderHtml IndexViews.index
-
     S.get "/projects" $ do
         projects <- S.liftAndCatchIO $ P.findAll conn
         S.html $ renderHtml $ ProjectViews.index projects
