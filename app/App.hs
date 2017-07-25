@@ -3,12 +3,13 @@
 module App where
 
 import qualified Data.Text.Lazy as T
-import Database.PostgreSQL.Simple (Connection)
-import Network.HTTP.Types.Status (notFound404)
+import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types.Status (notFound404)
+import           Text.Blaze.Html.Renderer.Text (renderHtml)
+import qualified Web.Scotty as S
+
 import qualified Project as P
 import qualified ProjectViews
-import Text.Blaze.Html.Renderer.Text (renderHtml)
-import qualified Web.Scotty as S
 
 app :: Connection -> S.ScottyM ()
 app conn = do

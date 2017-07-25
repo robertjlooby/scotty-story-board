@@ -2,9 +2,10 @@
 
 module IndexViews (index) where
 
+import           Text.Blaze.Html5 as H
+import           Text.Blaze.Html5.Attributes
+
 import qualified Layouts
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes
 
 index :: Html
 index = Layouts.app $ do

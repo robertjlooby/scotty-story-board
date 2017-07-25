@@ -2,9 +2,10 @@
 
 module ProjectSpec (spec) where
 
-import Database.PostgreSQL.Simple (Connection)
-import Project as P
-import Test.Hspec (Spec, describe, it, shouldBe)
+import           Database.PostgreSQL.Simple (Connection)
+import           Test.Hspec (Spec, describe, it, shouldBe)
+
+import qualified Project as P
 
 spec :: Connection -> Spec
 spec conn = describe "Project" $ do

@@ -2,9 +2,10 @@
 
 module UserSpec (spec) where
 
-import Database.PostgreSQL.Simple (Connection)
-import User as U
-import Test.Hspec (Spec, describe, it, shouldBe)
+import            Database.PostgreSQL.Simple (Connection)
+import            Test.Hspec (Spec, describe, it, shouldBe)
+
+import qualified  User as U
 
 spec :: Connection -> Spec
 spec conn = describe "User" $ do

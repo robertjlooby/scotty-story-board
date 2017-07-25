@@ -2,10 +2,10 @@
 
 module Index where
 
-import qualified IndexViews
-import Text.Blaze.Html.Renderer.Text (renderHtml)
+import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Web.Scotty as S
 
+import qualified IndexViews
 
 app :: S.ScottyM ()
 app = do

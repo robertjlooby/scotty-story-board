@@ -3,11 +3,11 @@
 
 module Project where
 
-import Data.Text (Text)
-import Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query, query_)
-import Database.PostgreSQL.Simple.FromField (FromField)
-import Database.PostgreSQL.Simple.FromRow (field, fromRow)
-import Database.PostgreSQL.Simple.ToField (ToField)
+import           Data.Text (Text)
+import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query, query_)
+import           Database.PostgreSQL.Simple.FromField (FromField)
+import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
+import           Database.PostgreSQL.Simple.ToField (ToField)
 
 newtype ProjectId = ProjectId Int deriving (Eq, FromField, Ord, Show, ToField)
 

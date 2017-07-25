@@ -2,19 +2,20 @@
 
 module Main where
 
-import qualified App
-import AppContext (getContext, environment, port)
-import qualified Auth
 import qualified Data.ByteString.Char8 as BS8
-import Database.PostgreSQL.Simple (connectPostgreSQL)
-import qualified Index
-import Network.HTTP.Conduit (newManager, tlsManagerSettings)
-import Network.Wai.Middleware.ForceSSL (forceSSL)
-import Network.Wai.Middleware.MethodOverridePost (methodOverridePost)
-import Network.Wai.Middleware.RequestLogger (logStdout)
-import Network.Wai.Middleware.Static (addBase, staticPolicy)
-import System.Environment (getEnv)
+import           Database.PostgreSQL.Simple (connectPostgreSQL)
+import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
+import           Network.Wai.Middleware.ForceSSL (forceSSL)
+import           Network.Wai.Middleware.MethodOverridePost (methodOverridePost)
+import           Network.Wai.Middleware.RequestLogger (logStdout)
+import           Network.Wai.Middleware.Static (addBase, staticPolicy)
+import           System.Environment (getEnv)
 import qualified Web.Scotty as S
+
+import qualified App
+import           AppContext (getContext, environment, port)
+import qualified Auth
+import qualified Index
 
 sslMiddleware :: String -> S.ScottyM ()
 sslMiddleware "production" = S.middleware forceSSL
