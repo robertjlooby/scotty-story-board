@@ -2,11 +2,12 @@
 
 module ProjectViews where
 
-import Data.Monoid ((<>))
+import           Data.Monoid ((<>))
+import           Text.Blaze.Html5 as H
+import           Text.Blaze.Html5.Attributes
+
 import qualified Layouts
 import qualified Project as P
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes
 
 index :: [P.Project] -> Html
 index projects = Layouts.app $ do

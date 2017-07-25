@@ -2,10 +2,11 @@
 
 module OAuthLoginSpec (spec) where
 
-import Database.PostgreSQL.Simple (Connection)
-import OAuthLogin as O
-import User as U
-import Test.Hspec (Spec, describe, it, shouldBe)
+import           Database.PostgreSQL.Simple (Connection)
+import           Test.Hspec (Spec, describe, it, shouldBe)
+
+import qualified OAuthLogin as O
+import qualified User as U
 
 spec :: Connection -> Spec
 spec conn = describe "OAuthLogin" $ do

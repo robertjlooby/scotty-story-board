@@ -2,9 +2,10 @@
 
 module OAuthLogin where
 
-import Data.Text (Text)
-import Database.PostgreSQL.Simple (Connection, execute, query)
-import User (User, UserId)
+import           Data.Text (Text)
+import           Database.PostgreSQL.Simple (Connection, execute, query)
+
+import           User (User, UserId)
 
 create :: Connection -> UserId -> Text -> Text -> IO ()
 create conn userId providerName providerUserId = do

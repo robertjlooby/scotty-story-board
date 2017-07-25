@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module IndexSpec (spec) where
+module IndexSpec where
+
+import           Test.Hspec (Spec, describe, it)
+import           Test.Hspec.Wai (get, shouldRespondWith, with)
+import qualified Web.Scotty as S
 
 import Index (app)
-import Test.Hspec (Spec, describe, it)
-import Test.Hspec.Wai (get, shouldRespondWith, with)
-import qualified Web.Scotty as S
 
 spec :: Spec
 spec = with (S.scottyApp app) $ do

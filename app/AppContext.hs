@@ -4,9 +4,9 @@ module AppContext
     ) where
 
 import qualified Data.ByteString.Char8 as BS
-import Data.Maybe (fromMaybe)
-import System.Environment (lookupEnv)
-import Web.ClientSession (Key, getKeyEnv)
+import           Data.Maybe (fromMaybe)
+import           System.Environment (lookupEnv)
+import           Web.ClientSession (Key, getKeyEnv)
 
 data AppContext = AppContext
     { environment :: String

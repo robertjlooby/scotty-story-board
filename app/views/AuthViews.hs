@@ -2,10 +2,11 @@
 
 module AuthViews (login) where
 
-import Data.ByteString (ByteString)
+import           Data.ByteString (ByteString)
+import           Text.Blaze.Html5 as H
+import           Text.Blaze.Html5.Attributes
+
 import qualified Layouts
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes
 
 login :: ByteString -> Html
 login googleLoginUrl = Layouts.app $ do

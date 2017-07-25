@@ -1,16 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module AppSpec (spec) where
+module AppSpec where
 
-import App (app)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import Data.Monoid ((<>))
-import Database.PostgreSQL.Simple (Connection)
-import qualified Project as P
-import Test.Hspec (Spec, describe, it, shouldBe)
-import Test.Hspec.Wai (delete, get, liftIO, postHtmlForm, request, shouldRespondWith, with)
+import           Data.Monoid ((<>))
+import           Database.PostgreSQL.Simple (Connection)
+import           Test.Hspec (Spec, describe, it, shouldBe)
+import           Test.Hspec.Wai (delete, get, liftIO, postHtmlForm, request, shouldRespondWith, with)
 import qualified Web.Scotty as S
+
+import           App (app)
+import qualified Project as P
 
 spec :: Connection -> Spec
 spec conn = with (S.scottyApp $ app conn) $ do

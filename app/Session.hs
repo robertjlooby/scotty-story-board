@@ -3,18 +3,19 @@
 
 module Session where
 
-import Data.Aeson (FromJSON, ToJSON, encode, defaultOptions, genericToEncoding, toEncoding)
-import Data.ByteString (ByteString)
+import           Data.Aeson (FromJSON, ToJSON, encode, defaultOptions, genericToEncoding, toEncoding)
+import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as BSL
-import Data.String (IsString)
+import           Data.String (IsString)
 import qualified Data.Text.Encoding as E
-import GHC.Generics (Generic)
-import qualified User
-import User (User, UserId)
-import Web.ClientSession (Key, decrypt, encryptIO)
-import Web.Cookie (def, setCookieName, setCookiePath, setCookieValue)
+import           GHC.Generics (Generic)
+import           Web.ClientSession (Key, decrypt, encryptIO)
+import           Web.Cookie (def, setCookieName, setCookiePath, setCookieValue)
 import qualified Web.Scotty as S
-import Web.Scotty.Cookie (getCookie, setCookie)
+import           Web.Scotty.Cookie (getCookie, setCookie)
+
+import qualified User
+import           User (User, UserId)
 
 data Session = Session
     { userId :: UserId

@@ -2,8 +2,8 @@
 
 module Layouts (app) where
 
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes
+import           Text.Blaze.Html5 as H
+import           Text.Blaze.Html5.Attributes
 
 app :: Html -> Html
 app pageBody = docTypeHtml $ do

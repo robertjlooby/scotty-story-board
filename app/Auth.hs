@@ -6,30 +6,31 @@ module Auth
     ( app
     ) where
 
-import AppContext (AppContext, environment, googleClientId, googleClientSecret, key)
-import qualified AuthViews
-import Data.Aeson (decode)
-import Data.Aeson.Types (FromJSON)
-import Data.ByteString (ByteString)
-import Data.ByteString.Lazy (fromStrict)
-import Data.ByteString.Base64 (decodeLenient)
-import Data.Monoid ((<>))
+import           Data.Aeson (decode)
+import           Data.Aeson.Types (FromJSON)
+import           Data.ByteString (ByteString)
+import           Data.ByteString.Lazy (fromStrict)
+import           Data.ByteString.Base64 (decodeLenient)
+import           Data.Monoid ((<>))
 import qualified Data.Text as T
-import Data.Text (Text)
+import           Data.Text (Text)
 import qualified Data.Text.Encoding as E
-import Database.PostgreSQL.Simple (Connection)
-import GHC.Generics (Generic)
-import Network.HTTP.Conduit (Manager)
-import Network.HTTP.Types (renderSimpleQuery)
-import Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), fetchAccessToken, idToken, idtoken)
-import qualified OAuthLogin
-import Session (getSessionCookie, setSessionCookie)
-import Text.Blaze.Html.Renderer.Text (renderHtml)
-import URI.ByteString (Absolute, URIRef, serializeURIRef')
-import URI.ByteString.QQ (uri)
-import qualified User
-import User (User)
+import           Database.PostgreSQL.Simple (Connection)
+import           GHC.Generics (Generic)
+import           Network.HTTP.Conduit (Manager)
+import           Network.HTTP.Types (renderSimpleQuery)
+import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), fetchAccessToken, idToken, idtoken)
+import           Text.Blaze.Html.Renderer.Text (renderHtml)
+import           URI.ByteString (Absolute, URIRef, serializeURIRef')
+import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
+
+import           AppContext (AppContext, environment, googleClientId, googleClientSecret, key)
+import qualified AuthViews
+import qualified OAuthLogin
+import           Session (getSessionCookie, setSessionCookie)
+import qualified User
+import           User (User)
 
 googleKey :: AppContext -> OAuth2
 googleKey appContext = OAuth2 { oauthClientId = E.decodeUtf8 $ googleClientId appContext
