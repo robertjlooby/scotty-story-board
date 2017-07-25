@@ -36,6 +36,7 @@ executable web
                      , OAuthLogin
                      , Project
                      , ProjectViews
+                     , Session
                      , User
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       aeson
@@ -43,12 +44,16 @@ executable web
                      , base64-bytestring
                      , blaze-html
                      , bytestring
+                     , clientsession
+                     , cookie
                      , hoauth2
                      , http-conduit
                      , http-types
                      , postgresql-simple
                      , scotty
+                     , scotty-cookie
                      , text
+                     , time
                      , uri-bytestring
                      , wai-middleware-static
                      , wai-extra

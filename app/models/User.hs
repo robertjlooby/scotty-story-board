@@ -3,13 +3,14 @@
 
 module User where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Database.PostgreSQL.Simple (Connection, FromRow, Only(..), query)
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import Database.PostgreSQL.Simple.ToField (ToField)
 
-newtype UserId = UserId Int deriving (Eq, FromField, Ord, Show, ToField)
+newtype UserId = UserId Int deriving (Eq, FromField, FromJSON, Ord, Show, ToField, ToJSON)
 
 instance FromRow UserId where
     fromRow = UserId <$> field
