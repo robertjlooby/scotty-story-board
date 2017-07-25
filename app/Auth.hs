@@ -6,7 +6,7 @@ module Auth
     ( app
     ) where
 
-import AppContext (AppContext, environment, googleClientId, googleClientSecret)
+import AppContext (AppContext, environment, googleClientId, googleClientSecret, key)
 import qualified AuthViews
 import Data.Aeson (decode)
 import Data.Aeson.Types (FromJSON)
@@ -23,6 +23,7 @@ import Network.HTTP.Conduit (Manager)
 import Network.HTTP.Types (renderSimpleQuery)
 import Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), fetchAccessToken, idToken, idtoken)
 import qualified OAuthLogin
+import Session (getSessionCookie, setSessionCookie)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import URI.ByteString (Absolute, URIRef, serializeURIRef')
 import URI.ByteString.QQ (uri)
@@ -68,6 +69,8 @@ instance FromJSON GoogleInfo
 app :: Connection -> Manager -> AppContext -> S.ScottyM ()
 app conn mgr appContext = do
     S.get "/login" $ do
+        session <- getSessionCookie (key appContext)
+        S.liftAndCatchIO $ print session
         S.html $ renderHtml $ AuthViews.login (getGoogleLoginUrl appContext)
 
     S.get "/oauth/google" $ do
@@ -76,6 +79,7 @@ app conn mgr appContext = do
         S.liftAndCatchIO $ putStrLn $ show googleInfo
         user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
         S.liftAndCatchIO $ putStrLn $ show user
+        _ <- setSessionCookie user (key appContext)
         S.redirect "/"
 
 getGoogleInfo :: Manager -> AppContext -> Text -> IO GoogleInfo
