@@ -13,7 +13,7 @@ import           System.Environment (getEnv)
 import qualified Web.Scotty as S
 
 import qualified App
-import           AppContext (getContext, environment, key, port)
+import           AppContext (getContext, environment, port)
 import qualified Auth
 import qualified Index
 import           Session (sessionMiddleware)
@@ -32,7 +32,7 @@ main = do
         S.middleware logStdout
         sslMiddleware (environment appContext)
         S.middleware $ staticPolicy (addBase "app/static")
-        S.middleware $ sessionMiddleware $ key appContext
+        S.middleware sessionMiddleware
 
         Index.app
         Auth.app conn mgr appContext
