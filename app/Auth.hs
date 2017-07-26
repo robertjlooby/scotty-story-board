@@ -15,6 +15,7 @@ import           Data.Monoid ((<>))
 import qualified Data.Text as T
 import           Data.Text (Text)
 import qualified Data.Text.Encoding as E
+import qualified Data.Vault.Lazy as Vault
 import           Database.PostgreSQL.Simple (Connection)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Conduit (Manager)
@@ -28,7 +29,7 @@ import qualified Web.Scotty as S
 import           AppContext (AppContext, environment, googleClientId, googleClientSecret, key)
 import qualified AuthViews
 import qualified OAuthLogin
-import           Session (getSessionCookie, setSessionCookie)
+import           Session (Session, getSession, setSessionCookie)
 import qualified User
 import           User (User)
 
@@ -67,10 +68,10 @@ data GoogleInfo = GoogleInfo
 
 instance FromJSON GoogleInfo
 
-app :: Connection -> Manager -> AppContext -> S.ScottyM ()
-app conn mgr appContext = do
+app :: Connection -> Manager -> AppContext -> Vault.Key Session -> S.ScottyM ()
+app conn mgr appContext vaultKey = do
     S.get "/login" $ do
-        session <- getSessionCookie (key appContext)
+        session <- getSession vaultKey
         S.liftAndCatchIO $ print session
         S.html $ renderHtml $ AuthViews.login (getGoogleLoginUrl appContext)
 
