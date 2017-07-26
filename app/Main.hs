@@ -3,7 +3,6 @@
 module Main where
 
 import qualified Data.ByteString.Char8 as BS8
-import           Data.Vault.Lazy (newKey)
 import           Database.PostgreSQL.Simple (connectPostgreSQL)
 import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import           Network.Wai.Middleware.ForceSSL (forceSSL)
@@ -28,14 +27,13 @@ main = do
     appContext <- getContext
     conn <- BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL
     mgr <- newManager tlsManagerSettings
-    vaultKey <- newKey
     S.scotty (port appContext) $ do
         S.middleware methodOverridePost
         S.middleware logStdout
         sslMiddleware (environment appContext)
         S.middleware $ staticPolicy (addBase "app/static")
-        S.middleware (sessionMiddleware (key appContext) vaultKey)
+        S.middleware $ sessionMiddleware $ key appContext
 
         Index.app
-        Auth.app conn mgr appContext vaultKey
+        Auth.app conn mgr appContext
         App.app conn
