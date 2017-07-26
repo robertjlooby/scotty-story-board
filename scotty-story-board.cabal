@@ -55,6 +55,8 @@ executable web
                      , text
                      , time
                      , uri-bytestring
+                     , vault
+                     , wai
                      , wai-middleware-static
                      , wai-extra
   default-language:    Haskell2010
