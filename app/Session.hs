@@ -1,7 +1,12 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Session where
+module Session
+    ( Session(..)
+    , getSession
+    , sessionMiddleware
+    , setSessionCookie
+    ) where
 
 import           Data.Aeson (FromJSON, ToJSON, encode, decodeStrict, defaultOptions, genericToEncoding, toEncoding)
 import qualified Data.ByteString.Lazy as BSL
@@ -10,6 +15,7 @@ import qualified Data.Vault.Lazy as Vault
 import           GHC.Generics (Generic)
 import           Network.HTTP.Types.Header (hCookie)
 import           Network.Wai (Middleware, requestHeaders, vault)
+import           System.IO.Unsafe
 import           Web.ClientSession (decrypt, encryptIO)
 import qualified Web.ClientSession as CS
 import           Web.Cookie (def, parseCookies, setCookieName, setCookiePath, setCookieValue)
@@ -41,8 +47,12 @@ setSessionCookie user sessionKey = do
                      }
     setCookie cookie
 
-sessionMiddleware :: CS.Key -> Vault.Key Session -> Middleware
-sessionMiddleware sessionKey vaultKey app request =
+vaultKey :: Vault.Key Session
+vaultKey = unsafePerformIO Vault.newKey
+{-# NOINLINE vaultKey #-}
+
+sessionMiddleware :: CS.Key -> Middleware
+sessionMiddleware sessionKey app request =
     case findSession of
       Just session -> app $ request { vault = Vault.insert vaultKey session (vault request) }
       Nothing -> app request
@@ -54,7 +64,7 @@ sessionMiddleware sessionKey vaultKey app request =
         session <- decrypt sessionKey sessionCookie
         decodeStrict session
 
-getSession :: Vault.Key Session -> S.ActionM (Maybe Session)
-getSession vaultKey = do
+getSession :: S.ActionM (Maybe Session)
+getSession = do
     request <- S.request
     return $ Vault.lookup vaultKey (vault request)
