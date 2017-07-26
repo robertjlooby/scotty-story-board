@@ -25,7 +25,7 @@ import           URI.ByteString (Absolute, URIRef, serializeURIRef')
 import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
 
-import           AppContext (AppContext, environment, googleClientId, googleClientSecret, key)
+import           AppContext (AppContext, environment, googleClientId, googleClientSecret)
 import qualified AuthViews
 import qualified OAuthLogin
 import           Session (getSession, setSessionCookie)
@@ -80,7 +80,7 @@ app conn mgr appContext = do
         S.liftAndCatchIO $ putStrLn $ show googleInfo
         user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
         S.liftAndCatchIO $ putStrLn $ show user
-        _ <- setSessionCookie user (key appContext)
+        _ <- setSessionCookie user
         S.redirect "/"
 
 getGoogleInfo :: Manager -> AppContext -> Text -> IO GoogleInfo

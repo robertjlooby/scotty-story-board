@@ -37,8 +37,8 @@ instance FromJSON Session
 sessionCookieName :: IsString a => a
 sessionCookieName = "session"
 
-setSessionCookie :: User -> CS.Key -> S.ActionM ()
-setSessionCookie user sessionKey = do
+setSessionCookie :: User -> S.ActionM ()
+setSessionCookie user = do
     let session = Session (User.id_ user)
     encrypted <- S.liftAndCatchIO $ encryptIO sessionKey (BSL.toStrict . encode $ session)
     let cookie = def { setCookieName = sessionCookieName
@@ -51,8 +51,12 @@ vaultKey :: Vault.Key Session
 vaultKey = unsafePerformIO Vault.newKey
 {-# NOINLINE vaultKey #-}
 
-sessionMiddleware :: CS.Key -> Middleware
-sessionMiddleware sessionKey app request =
+sessionKey :: CS.Key
+sessionKey = unsafePerformIO $ CS.getKeyEnv "SESSION_KEY"
+{-# NOINLINE sessionKey #-}
+
+sessionMiddleware :: Middleware
+sessionMiddleware app request =
     case findSession of
       Just session -> app $ request { vault = Vault.insert vaultKey session (vault request) }
       Nothing -> app request
