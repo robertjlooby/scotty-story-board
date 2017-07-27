@@ -5,7 +5,7 @@ module Session
     ( Session(..)
     , getSession
     , sessionMiddleware
-    , setSessionCookie
+    , setSession
     ) where
 
 import           Data.Aeson (FromJSON, ToJSON, encode, decodeStrict, defaultOptions, genericToEncoding, toEncoding)
@@ -22,8 +22,7 @@ import           Web.Cookie (def, parseCookies, setCookieName, setCookiePath, se
 import qualified Web.Scotty as S
 import           Web.Scotty.Cookie (setCookie)
 
-import qualified User
-import           User (User, UserId)
+import           User (UserId)
 
 data Session = Session
     { userId :: UserId
@@ -37,9 +36,8 @@ instance FromJSON Session
 sessionCookieName :: IsString a => a
 sessionCookieName = "session"
 
-setSessionCookie :: User -> S.ActionM ()
-setSessionCookie user = do
-    let session = Session (User.id_ user)
+setSession :: Session -> S.ActionM ()
+setSession session = do
     encrypted <- S.liftAndCatchIO $ encryptIO sessionKey (BSL.toStrict . encode $ session)
     let cookie = def { setCookieName = sessionCookieName
                      , setCookieValue = encrypted

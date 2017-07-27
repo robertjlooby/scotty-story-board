@@ -28,7 +28,7 @@ import qualified Web.Scotty as S
 import           AppContext (AppContext, environment, googleClientId, googleClientSecret)
 import qualified AuthViews
 import qualified OAuthLogin
-import           Session (getSession, setSessionCookie)
+import           Session (Session(Session), getSession, setSession)
 import qualified User
 import           User (User)
 
@@ -77,10 +77,9 @@ app conn mgr appContext = do
     S.get "/oauth/google" $ do
         code <- S.param "code" :: S.ActionM T.Text
         googleInfo <- S.liftAndCatchIO $ getGoogleInfo mgr appContext code
-        S.liftAndCatchIO $ putStrLn $ show googleInfo
         user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
-        S.liftAndCatchIO $ putStrLn $ show user
-        _ <- setSessionCookie user
+        let session = Session (User.id_ user)
+        _ <- setSession session
         S.redirect "/"
 
 getGoogleInfo :: Manager -> AppContext -> Text -> IO GoogleInfo
