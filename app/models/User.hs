@@ -18,26 +18,27 @@ instance FromRow UserId where
 data User = User
     { id_ :: UserId
     , name :: Text
+    , email :: Text
     } deriving (Eq, Show)
 
 instance FromRow User where
-    fromRow = User <$> field <*> field
+    fromRow = User <$> field <*> field <*> field
 
-create :: Connection -> Text -> IO UserId
-create conn name' = do
-    [userId] <- query conn "INSERT INTO users (name) VALUES (?) RETURNING id" (Only name')
+create :: Connection -> Text -> Text -> IO UserId
+create conn name' email' = do
+    [userId] <- query conn "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id" (name', email')
     return userId
 
 find :: Connection -> UserId -> IO (Maybe User)
 find conn (UserId userId) = do
-    users <- query conn "SELECT id, name FROM users WHERE id = ?" $ Only userId
+    users <- query conn "SELECT id, name, email FROM users WHERE id = ?" $ Only userId
     case users of
         [user] -> return $ Just user
         _      -> return Nothing
 
 findByName :: Connection -> Text -> IO (Maybe User)
 findByName conn userName = do
-    users <- query conn "SELECT id, name FROM users WHERE name = ?" $ Only userName
+    users <- query conn "SELECT id, name, email FROM users WHERE name = ?" $ Only userName
     case users of
         [user] -> return $ Just user
         _      -> return Nothing

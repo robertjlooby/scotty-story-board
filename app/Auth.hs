@@ -98,7 +98,7 @@ getOrCreateUser conn googleInfo = do
 
 createUser :: Connection -> GoogleInfo -> IO User
 createUser conn googleInfo = do
-    userId <- User.create conn (email googleInfo)
+    userId <- User.create conn (name googleInfo) (email googleInfo)
     (Just user) <- User.find conn userId
     _ <- OAuthLogin.create conn userId "google" (sub googleInfo)
     return user
