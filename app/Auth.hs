@@ -27,7 +27,7 @@ import qualified Web.Scotty as S
 import           AppContext (AppContext, environment, googleClientId, googleClientSecret)
 import qualified AuthViews
 import qualified OAuthLogin
-import           Session (Session(Session), getSession, setSession)
+import           Session (Session(Session), deleteSession, getSession, setSession)
 import qualified User
 import           User (User)
 
@@ -73,6 +73,10 @@ app conn mgr appContext = do
         session <- getSession
         S.liftAndCatchIO $ print session
         S.html $ renderHtml $ AuthViews.login (getGoogleLoginUrl appContext)
+
+    S.get "/logout" $ do
+        _ <- deleteSession
+        S.redirect "/login"
 
     S.get "/oauth/google" $ do
         code <- S.param "code" :: S.ActionM T.Text
