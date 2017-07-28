@@ -4,6 +4,7 @@
 module Session
     ( Session(..)
     , getSession
+    , deleteSession
     , sessionMiddleware
     , setSession
     ) where
@@ -20,7 +21,7 @@ import           Web.ClientSession (decrypt, encryptIO)
 import qualified Web.ClientSession as CS
 import           Web.Cookie (def, parseCookies, setCookieName, setCookiePath, setCookieValue)
 import qualified Web.Scotty as S
-import           Web.Scotty.Cookie (setCookie)
+import           Web.Scotty.Cookie (deleteCookie, setCookie)
 
 import           User (UserId)
 
@@ -70,3 +71,6 @@ getSession :: S.ActionM (Maybe Session)
 getSession = do
     request <- S.request
     return $ Vault.lookup vaultKey (vault request)
+
+deleteSession :: S.ActionM ()
+deleteSession = deleteCookie sessionCookieName

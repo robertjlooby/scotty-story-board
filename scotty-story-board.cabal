@@ -41,7 +41,6 @@ executable web
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       aeson
                      , base
-                     , base64-bytestring
                      , blaze-html
                      , bytestring
                      , clientsession
@@ -82,6 +81,7 @@ test-suite test
                      , Project
                      , ProjectSpec
                      , ProjectViews
+                     , Session
                      , User
                      , UserSpec
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
@@ -90,6 +90,8 @@ test-suite test
                      , base64-bytestring
                      , blaze-html
                      , bytestring
+                     , clientsession
+                     , cookie
                      , hoauth2
                      , hspec
                      , hspec-wai
@@ -98,8 +100,11 @@ test-suite test
                      , postgresql-simple
                      , postgresql-simple-migration
                      , scotty
+                     , scotty-cookie
                      , text
                      , uri-bytestring
+                     , vault
+                     , wai
   default-language:    Haskell2010
 
 source-repository head
