@@ -17,7 +17,8 @@ import           GHC.Generics (Generic)
 import           Network.HTTP.Conduit (Manager)
 import           Network.HTTP.Simple (getResponseBody, httpJSON, parseRequest, setRequestQueryString)
 import           Network.HTTP.Types (renderSimpleQuery)
-import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), fetchAccessToken, idToken, idtoken)
+import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, fetchAccessToken, idToken, idtoken)
+import           Network.OAuth.OAuth2.TokenRequest (Errors)
 import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import           URI.ByteString (Absolute, URIRef, serializeURIRef')
 import           URI.ByteString.QQ (uri)
@@ -75,19 +76,27 @@ app conn mgr appContext = do
 
     S.get "/oauth/google" $ do
         code <- S.param "code" :: S.ActionM T.Text
-        googleInfo <- S.liftAndCatchIO $ getGoogleInfo mgr appContext code
-        user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
-        let session = Session (User.id_ user)
-        _ <- setSession session
-        S.redirect "/"
+        googleInfoResult <- S.liftAndCatchIO $ getGoogleInfo mgr appContext code
+        case googleInfoResult of
+            Right googleInfo -> do
+                user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
+                let session = Session (User.id_ user)
+                _ <- setSession session
+                S.redirect "/"
+            Left errors -> do
+                S.liftAndCatchIO $ print errors
+                S.redirect "/"
 
-getGoogleInfo :: Manager -> AppContext -> Text -> IO GoogleInfo
+getGoogleInfo :: Manager -> AppContext -> Text -> IO (Either (OAuth2Error Errors) GoogleInfo)
 getGoogleInfo mgr appContext code = do
-    (Right token) <- fetchAccessToken mgr (googleKey appContext) (ExchangeToken code)
-    (Just jwt) <- return . idToken $ token
-    req <- parseRequest "https://www.googleapis.com/oauth2/v3/tokeninfo"
-    resp <- httpJSON (setRequestQueryString [("id_token", Just (E.encodeUtf8 $ idtoken jwt))] req)
-    return $ getResponseBody resp
+    oAuth2Result <- fetchAccessToken mgr (googleKey appContext) (ExchangeToken code)
+    case oAuth2Result of
+        Right token -> do
+            (Just jwt) <- return . idToken $ token
+            req <- parseRequest "https://www.googleapis.com/oauth2/v3/tokeninfo"
+            resp <- httpJSON (setRequestQueryString [("id_token", Just (E.encodeUtf8 $ idtoken jwt))] req)
+            return $ Right $ getResponseBody resp
+        Left errors -> return $ Left errors
 
 getOrCreateUser :: Connection -> GoogleInfo -> IO User
 getOrCreateUser conn googleInfo = do
