@@ -16,7 +16,7 @@ findUser :: Connection -> Text -> Text -> IO (Maybe User)
 findUser conn providerName providerUserId = do
     users <- query
                conn
-               "SELECT users.id, name FROM users INNER JOIN oauth_logins ON users.id = oauth_logins.user_id WHERE provider_name = ? AND provider_user_id = ?"
+               "SELECT users.id, name, email FROM users INNER JOIN oauth_logins ON users.id = oauth_logins.user_id WHERE provider_name = ? AND provider_user_id = ?"
                (providerName, providerUserId)
     case users of
         [user] -> return $ Just user
