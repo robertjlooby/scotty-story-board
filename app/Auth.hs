@@ -6,11 +6,8 @@ module Auth
     ( app
     ) where
 
-import           Data.Aeson (decode)
 import           Data.Aeson.Types (FromJSON)
 import           Data.ByteString (ByteString)
-import           Data.ByteString.Lazy (fromStrict)
-import           Data.ByteString.Base64 (decodeLenient)
 import           Data.Monoid ((<>))
 import qualified Data.Text as T
 import           Data.Text (Text)
@@ -18,6 +15,7 @@ import qualified Data.Text.Encoding as E
 import           Database.PostgreSQL.Simple (Connection)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Conduit (Manager)
+import           Network.HTTP.Simple (getResponseBody, httpJSON, parseRequest, setRequestQueryString)
 import           Network.HTTP.Types (renderSimpleQuery)
 import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), fetchAccessToken, idToken, idtoken)
 import           Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -48,7 +46,7 @@ getGoogleLoginUrl appContext =
             [ ("client_id", googleClientId appContext)
             , ("response_type", "code")
             , ("redirect_uri", googleRedirectUri (environment appContext))
-            , ("scope", "openid email")
+            , ("scope", "email profile")
             ]
   where
     googleAuthBaseUrl = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -63,6 +61,7 @@ googleRedirectUri env = serializeURIRef' (googleCallback env)
 data GoogleInfo = GoogleInfo
     { sub :: T.Text
     , email :: T.Text
+    , name :: T.Text
     } deriving (Eq, Generic, Show)
 
 instance FromJSON GoogleInfo
@@ -86,10 +85,9 @@ getGoogleInfo :: Manager -> AppContext -> Text -> IO GoogleInfo
 getGoogleInfo mgr appContext code = do
     (Right token) <- fetchAccessToken mgr (googleKey appContext) (ExchangeToken code)
     (Just jwt) <- return . idToken $ token
-    let encodedGoogleInfo = T.dropAround ((==) '.') . T.dropAround ((/=) '.') . idtoken $ jwt
-        googleInfoJson    = decodeLenient (E.encodeUtf8 encodedGoogleInfo)
-        (Just googleInfo) = decode (fromStrict googleInfoJson)
-    return googleInfo
+    req <- parseRequest "https://www.googleapis.com/oauth2/v3/tokeninfo"
+    resp <- httpJSON (setRequestQueryString [("id_token", Just (E.encodeUtf8 $ idtoken jwt))] req)
+    return $ getResponseBody resp
 
 getOrCreateUser :: Connection -> GoogleInfo -> IO User
 getOrCreateUser conn googleInfo = do
