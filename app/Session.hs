@@ -3,10 +3,12 @@
 
 module Session
     ( Session(..)
+    , authorized
     , getSession
     , deleteSession
     , sessionMiddleware
     , setSession
+    , vaultKey
     ) where
 
 import           Data.Aeson (FromJSON, ToJSON, encode, decodeStrict, defaultOptions, genericToEncoding, toEncoding)
@@ -15,6 +17,7 @@ import           Data.String (IsString)
 import qualified Data.Vault.Lazy as Vault
 import           GHC.Generics (Generic)
 import           Network.HTTP.Types.Header (hCookie)
+import           Network.HTTP.Types.Status (unauthorized401)
 import           Network.Wai (Middleware, requestHeaders, vault)
 import           System.IO.Unsafe
 import           Web.ClientSession (decrypt, encryptIO)
@@ -74,3 +77,10 @@ getSession = do
 
 deleteSession :: S.ActionM ()
 deleteSession = deleteCookie sessionCookieName
+
+authorized :: (Session -> S.ActionM ()) -> S.ActionM ()
+authorized action = do
+    session <- getSession
+    case session of
+      Just loggedInSession -> action loggedInSession
+      Nothing -> S.status unauthorized401

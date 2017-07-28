@@ -6,6 +6,7 @@ import           Database.PostgreSQL.Simple (Connection)
 import           Test.Hspec (Spec, describe, it, shouldBe)
 
 import qualified Project as P
+import qualified User as U
 
 spec :: Connection -> Spec
 spec conn = describe "Project" $ do
@@ -26,6 +27,34 @@ spec conn = describe "Project" $ do
     it "returns nothing if name not found" $ do
         found <- P.findByName conn "project"
         found `shouldBe` Nothing
+
+    it "can find by user id" $ do
+        userId <- U.create conn "user" "email"
+        projectId <- P.create conn "project1" "description"
+        (Just project) <- P.find conn projectId
+        _ <- P.addUser conn projectId userId
+
+        otherUserId <- U.create conn "user2" "email2"
+        otherProjectId <- P.create conn "project2" "description"
+
+        found <- P.findByUserId conn userId projectId
+        found `shouldBe` Just project
+        forOtherUser <- P.findByUserId conn otherUserId projectId
+        forOtherUser `shouldBe` Nothing
+        forOtherProject <- P.findByUserId conn userId otherProjectId
+        forOtherProject `shouldBe` Nothing
+
+    it "can find all by user id" $ do
+        userId <- U.create conn "user" "email"
+        projectId1 <- P.create conn "project1" "description"
+        _ <- P.create conn "project2" "description"
+        projectId3 <- P.create conn "project3" "description"
+        (Just project1) <- P.find conn projectId1
+        (Just project3) <- P.find conn projectId3
+        _ <- P.addUser conn projectId1 userId
+        _ <- P.addUser conn projectId3 userId
+        found <- P.allByUserId conn userId
+        found `shouldBe` [project1, project3]
 
     it "can update a project" $ do
         projectId <- P.create conn "name" "desc"

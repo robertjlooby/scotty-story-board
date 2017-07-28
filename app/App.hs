@@ -10,44 +10,54 @@ import qualified Web.Scotty as S
 
 import qualified Project as P
 import qualified ProjectViews
+import           Session (authorized, userId)
 
 app :: Connection -> S.ScottyM ()
 app conn = do
-    S.get "/projects" $ do
-        projects <- S.liftAndCatchIO $ P.findAll conn
+    S.get "/projects" $ authorized $ \session -> do
+        projects <- S.liftAndCatchIO $ P.allByUserId conn (userId session)
         S.html $ renderHtml $ ProjectViews.index projects
 
-    S.get "/projects/:id" $ do
+    S.get "/projects/:id" $ authorized $ \session -> do
         id_ <- S.param "id"
-        project <- S.liftAndCatchIO $ P.find conn (P.ProjectId id_)
+        project <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
         case project of
             Just p -> S.html $ renderHtml $ ProjectViews.show_ p
             Nothing -> S.status notFound404
 
-    S.get "/projects/:id/edit" $ do
+    S.get "/projects/:id/edit" $ authorized $ \session -> do
         id_ <- S.param "id"
-        project <- S.liftAndCatchIO $ P.find conn (P.ProjectId id_)
+        project <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
         case project of
             Just p -> S.html $ renderHtml $ ProjectViews.edit p
             Nothing -> S.status notFound404
 
-    S.put "/projects/:id" $ do
+    S.put "/projects/:id" $ authorized $ \session -> do
         id_ <- S.param "id"
         name <- S.param "name"
         description <- S.param "description"
-        _ <- S.liftAndCatchIO $ P.update conn $ P.Project (P.ProjectId id_) name description
-        S.redirect $ T.pack ("/projects/" ++ show id_)
+        project <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
+        case project of
+            Just _ -> do
+                _ <- S.liftAndCatchIO $ P.update conn $ P.Project (P.ProjectId id_) name description
+                S.redirect $ T.pack ("/projects/" ++ show id_)
+            Nothing -> S.status notFound404
 
-    S.delete "/projects/:id" $ do
+    S.delete "/projects/:id" $ authorized $ \session -> do
         id_ <- S.param "id"
-        _ <- S.liftAndCatchIO $ P.delete conn (P.ProjectId id_)
-        S.redirect "/projects"
+        project <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
+        case project of
+            Just _ -> do
+                _ <- S.liftAndCatchIO $ P.delete conn (P.ProjectId id_)
+                S.redirect "/projects"
+            Nothing -> S.status notFound404
 
-    S.get "/projects/new" $ do
+    S.get "/projects/new" $ authorized $ \_ -> do
         S.html $ renderHtml $ ProjectViews.new
 
-    S.post "/projects" $ do
+    S.post "/projects" $ authorized $ \session -> do
         name <- S.param "name"
         description <- S.param "description"
-        _ <- S.liftAndCatchIO $ P.create conn name description
+        projectId <- S.liftAndCatchIO $ P.create conn name description
+        _ <- S.liftAndCatchIO $ P.addUser conn projectId (userId session)
         S.redirect "/projects"

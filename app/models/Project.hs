@@ -9,6 +9,8 @@ import           Database.PostgreSQL.Simple.FromField (FromField)
 import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
 
+import           User (UserId)
+
 newtype ProjectId = ProjectId Int deriving (Eq, FromField, Ord, Show, ToField)
 
 instance FromRow ProjectId where
@@ -28,6 +30,11 @@ create conn name' description' = do
     [projectId] <- query conn "INSERT INTO projects (name, description) VALUES (?, ?) RETURNING id" (name', description')
     return projectId
 
+addUser :: Connection -> ProjectId -> UserId -> IO ()
+addUser conn projectId userId = do
+    _ <- execute conn "INSERT INTO projects_users (project_id, user_id) VALUES (?, ?)" (projectId, userId)
+    return ()
+
 find :: Connection -> ProjectId -> IO (Maybe Project)
 find conn (ProjectId projectId) = do
     project <- query conn "SELECT id, name, description FROM projects WHERE id = ?" $ Only projectId
@@ -41,6 +48,17 @@ findByName conn projectName = do
     case project of
         [proj] -> return $ Just proj
         _      -> return Nothing
+
+findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
+findByUserId conn userId projectId = do
+    project <- query conn "SELECT id, name, description FROM projects INNER JOIN projects_users ON projects_users.project_id = projects.id WHERE projects_users.user_id = ? AND projects.id = ?" (userId, projectId)
+    case project of
+        [proj] -> return $ Just proj
+        _      -> return Nothing
+
+allByUserId :: Connection -> UserId -> IO [Project]
+allByUserId conn userId =
+    query conn "SELECT id, name, description FROM projects INNER JOIN projects_users ON projects_users.project_id = projects.id WHERE projects_users.user_id = ?" (Only userId)
 
 update :: Connection -> Project -> IO ()
 update conn project = do
