@@ -128,8 +128,8 @@ spec conn = with (S.scottyApp $ app conn) $ do
 
 createUser :: Connection -> WaiSession (U.UserId, Session)
 createUser conn = do
-    userId <- liftIO $ U.create conn "user" "email"
-    return (userId, Session userId)
+    user <- liftIO $ U.create conn "user" "email"
+    return (U.id_ user, Session (U.id_ user))
 
 urlFor :: P.Project -> ByteString
 urlFor project =

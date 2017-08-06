@@ -10,18 +10,18 @@ import qualified  User as U
 spec :: Connection -> Spec
 spec conn = describe "User" $ do
     it "can find by id" $ do
-        userId <- U.create conn "user" "email"
-        found <- U.find conn userId
-        found `shouldBe` (Just $ U.User userId "user" "email")
+        user <- U.create conn "user" "email"
+        found <- U.find conn (U.id_ user)
+        found `shouldBe` Just user
 
     it "returns nothing if id not found" $ do
         found <- U.find conn (U.UserId 0)
         found `shouldBe` Nothing
 
     it "can find by name" $ do
-        userId <- U.create conn "user" "email"
+        user <- U.create conn "user" "email"
         found <- U.findByName conn "user"
-        found `shouldBe` (Just $ U.User userId "user" "email")
+        found `shouldBe` Just user
 
     it "returns nothing if name not found" $ do
         found <- U.findByName conn "user"
