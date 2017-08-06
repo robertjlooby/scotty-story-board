@@ -93,4 +93,6 @@ with404 :: Maybe a -> (a -> S.ActionM ()) -> S.ActionM ()
 with404 maybeEntity handler =
     case maybeEntity of
         Just entity -> handler entity
-        Nothing -> S.status notFound404
+        Nothing -> do
+            S.status notFound404
+            ErrorViews.notFound
