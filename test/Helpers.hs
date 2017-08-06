@@ -7,9 +7,10 @@ import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Char8 as LB8
+import           Data.List (intersperse)
 import qualified Data.Vault.Lazy as Vault
-import           Network.CGI.Protocol (formEncode)
 import           Network.HTTP.Types (Header, Method, hContentType, methodDelete, methodGet, methodOptions, methodPatch, methodPost, methodPut)
+import           Network.URI (escapeURIString, isUnescapedInURI)
 import           Network.Wai (Request(..), vault)
 import           Network.Wai.Test (SRequest(..), SResponse, defaultRequest, runSession, setPath, srequest)
 import           Test.Hspec.Wai (WaiSession)
@@ -54,3 +55,23 @@ withSession session request = request {simpleRequest = withSessionSet}
   where
       req = simpleRequest request
       withSessionSet = req { vault = Vault.insert vaultKey session (vault req) }
+
+-- From cgi lib
+-- | Formats name-value pairs as application\/x-www-form-urlencoded.
+formEncode :: [(String,String)] -> String
+formEncode xs =
+    concat $ intersperse "&" [urlEncode n ++ "=" ++ urlEncode v | (n,v) <- xs]
+
+-- | Converts a single value to the application\/x-www-form-urlencoded encoding.
+urlEncode :: String -> String
+urlEncode = replace ' ' '+' . escapeURIString okChar
+  where okChar c = c == ' ' ||
+                   (isUnescapedInURI c && c `notElem` ("&=+" :: String))
+
+-- | Replaces all instances of a value in a list by another value.
+replace :: Eq a =>
+           a   -- ^ Value to look for
+        -> a   -- ^ Value to replace it with
+        -> [a] -- ^ Input list
+        -> [a] -- ^ Output list
+replace x y = map (\z -> if z == x then y else z)
