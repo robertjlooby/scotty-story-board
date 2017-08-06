@@ -2,6 +2,7 @@
 
 module AppSpec where
 
+import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS
 import           Data.Monoid ((<>))
 import           Database.PostgreSQL.Simple (Connection)
@@ -14,11 +15,6 @@ import           Helpers (delete', get', postHtmlForm', putHtmlForm', run, withS
 import qualified Project as P
 import           Session (Session(Session))
 import qualified User as U
-
-createUser :: Connection -> WaiSession (U.UserId, Session)
-createUser conn = do
-    userId <- liftIO $ U.create conn "user" "email"
-    return (userId, Session userId)
 
 spec :: Connection -> Spec
 spec conn = with (S.scottyApp $ app conn) $ do
@@ -57,30 +53,26 @@ spec conn = with (S.scottyApp $ app conn) $ do
     describe "GET /projects/:id" $ do
         it "responds with a 200 for a project the user is linked to" $ do
             (userId, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "project" "description"
-            _ <- liftIO $ P.addUser conn (P.ProjectId projectId) userId
-            let url = BS.pack $ "/projects/" <> show projectId
-            run (withSession session $ get' url) `shouldRespondWith` 200
+            project <- liftIO $ P.create conn "name" "desc"
+            _ <- liftIO $ P.addUser conn (P.id_ project) userId
+            run (withSession session . get' $ urlFor project) `shouldRespondWith` 200
 
         it "responds with a 404 for a project the user is not linked to" $ do
             (_, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "project" "description"
-            let url = BS.pack $ "/projects/" <> show projectId
-            run (withSession session $ get' url) `shouldRespondWith` 404
+            project <- liftIO $ P.create conn "name" "desc"
+            run (withSession session . get' $ urlFor project) `shouldRespondWith` 404
 
     describe "GET /projects/:id/edit" $ do
         it "responds with a 200 for a project the user is linked to" $ do
             (userId, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "project" "description"
-            _ <- liftIO $ P.addUser conn (P.ProjectId projectId) userId
-            let url = BS.pack $ "/projects/" <> show projectId <> "/edit"
-            run (withSession session $ get' url) `shouldRespondWith` 200
+            project <- liftIO $ P.create conn "name" "desc"
+            _ <- liftIO $ P.addUser conn (P.id_ project) userId
+            run (withSession session . get' $ urlFor project <> "/edit") `shouldRespondWith` 200
 
         it "responds with a 404 for a project the user is not linked to" $ do
             (_, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "project" "description"
-            let url = BS.pack $ "/projects/" <> show projectId <> "/edit"
-            run (withSession session $ get' url) `shouldRespondWith` 404
+            project <- liftIO $ P.create conn "name" "desc"
+            run (withSession session . get' $ urlFor project <> "/edit") `shouldRespondWith` 404
 
     describe "POST /projects" $ do
         it "creates a project linked to the user and responds with a 302" $ do
@@ -97,42 +89,50 @@ spec conn = with (S.scottyApp $ app conn) $ do
     describe "PUT /projects/:id" $ do
         it "updates a project and responds with a 302 for a project the user is linked to" $ do
             (userId, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "name" "desc"
-            _ <- liftIO $ P.addUser conn (P.ProjectId projectId) userId
-            let url = BS.pack $ "/projects/" <> show projectId
-            let request = putHtmlForm' url [("name", "new name"), ("description", "new desc")]
+            project <- liftIO $ P.create conn "name" "desc"
+            _ <- liftIO $ P.addUser conn (P.id_ project) userId
+            let request = putHtmlForm' (urlFor project) [("name", "new name"), ("description", "new desc")]
 
             run (withSession session request) `shouldRespondWith` 302
 
-            found <- liftIO $ P.find conn (P.ProjectId projectId)
-            liftIO $ found `shouldBe` (Just $ P.Project (P.ProjectId projectId) "new name" "new desc")
+            found <- liftIO $ P.find conn (P.id_ project)
+            liftIO $ found `shouldBe` (Just $ P.Project (P.id_ project) "new name" "new desc")
+
         it "responds with a 404 for a project the user is not linked to" $ do
             (_, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "name" "desc"
-            let url = BS.pack $ "/projects/" <> show projectId
-            let request = putHtmlForm' url [("name", "new name"), ("description", "new desc")]
+            project <- liftIO $ P.create conn "name" "desc"
+            let request = putHtmlForm' (urlFor project) [("name", "new name"), ("description", "new desc")]
 
             run (withSession session request) `shouldRespondWith` 404
 
-            found <- liftIO $ P.find conn (P.ProjectId projectId)
-            liftIO $ found `shouldBe` (Just $ P.Project (P.ProjectId projectId) "name" "desc")
+            found <- liftIO $ P.find conn (P.id_ project)
+            liftIO $ found `shouldBe` Just project
 
     describe "DELETE /projects/:id" $ do
         it "deletes a projects and responds with a 302 for a project the user is linked to" $ do
             (userId, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "name" "desc"
-            _ <- liftIO $ P.addUser conn (P.ProjectId projectId) userId
-            let url = BS.pack $ "/projects/" <> show projectId
+            project <- liftIO $ P.create conn "name" "desc"
+            _ <- liftIO $ P.addUser conn (P.id_ project) userId
 
-            run (withSession session $ delete' url) `shouldRespondWith` 302
-            found <- liftIO $ P.find conn (P.ProjectId projectId)
+            run (withSession session . delete' $ urlFor project) `shouldRespondWith` 302
+            found <- liftIO $ P.find conn (P.id_ project)
             liftIO $ found `shouldBe` Nothing
 
         it "responds with a 404 for a project the user is not linked to" $ do
             (_, session) <- createUser conn
-            (P.ProjectId projectId) <- liftIO $ P.create conn "name" "desc"
-            let url = BS.pack $ "/projects/" <> show projectId
+            project <- liftIO $ P.create conn "name" "desc"
 
-            run (withSession session $ delete' url) `shouldRespondWith` 404
-            found <- liftIO $ P.find conn (P.ProjectId projectId)
-            liftIO $ found `shouldBe` Just (P.Project (P.ProjectId projectId) "name" "desc")
+            run (withSession session . delete' $ urlFor project) `shouldRespondWith` 404
+            found <- liftIO $ P.find conn (P.id_ project)
+            liftIO $ found `shouldBe` Just project
+
+createUser :: Connection -> WaiSession (U.UserId, Session)
+createUser conn = do
+    userId <- liftIO $ U.create conn "user" "email"
+    return (userId, Session userId)
+
+urlFor :: P.Project -> ByteString
+urlFor project =
+    let (P.ProjectId projectId) = P.id_ project
+    in
+        BS.pack $ "/projects/" <> show projectId
