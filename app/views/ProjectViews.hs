@@ -5,11 +5,12 @@ module ProjectViews where
 import           Data.Monoid ((<>))
 import           Text.Blaze.Html5 as H
 import           Text.Blaze.Html5.Attributes
+import qualified Web.Scotty as S
 
 import qualified Layouts
 import qualified Project as P
 
-index :: [P.Project] -> Html
+index :: [P.Project] -> S.ActionM ()
 index projects = Layouts.app $ do
     H.div ! class_ "container" $ do
         H.div ! class_ "row" $ do
@@ -21,7 +22,7 @@ index projects = Layouts.app $ do
     showProject project = do
         (li . (a ! href (toValue project)) . toHtml . P.name) project
 
-show_ :: P.Project -> Html
+show_ :: P.Project -> S.ActionM ()
 show_ project = Layouts.app $ do
     H.div ! class_ "container" $ do
         H.div ! class_ "row" $ do
@@ -38,7 +39,7 @@ show_ project = Layouts.app $ do
             H.div ! class_ "six columns" $ do
                 (a ! href "/projects") $ "All"
 
-new :: Html
+new :: S.ActionM ()
 new = Layouts.app $ do
     H.div ! class_ "container" $ do
         H.form ! action "/projects" ! method "POST" $ do
@@ -53,7 +54,7 @@ new = Layouts.app $ do
                 a ! class_ "button"! href "/projects" $ "Cancel"
                 input ! class_ "button-primary" ! type_ "submit" ! value "Submit"
 
-edit :: P.Project -> Html
+edit :: P.Project -> S.ActionM ()
 edit project = Layouts.app $ do
     H.div ! class_ "container" $ do
         H.form ! action (toValue project) ! method "POST" $ do

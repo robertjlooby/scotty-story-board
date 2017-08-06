@@ -4,7 +4,6 @@ module ProjectsController where
 
 import qualified Data.Text.Lazy as T
 import           Database.PostgreSQL.Simple (Connection)
-import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Web.Scotty as S
 
 import qualified Project as P
@@ -15,17 +14,17 @@ app :: Connection -> S.ScottyM ()
 app conn = do
     S.get "/projects" $ authorized $ \session -> do
         projects <- S.liftAndCatchIO $ P.allByUserId conn (userId session)
-        S.html $ renderHtml $ ProjectViews.index projects
+        ProjectViews.index projects
 
     S.get "/projects/:id" $ authorized $ \session -> do
         id_ <- S.param "id"
         project <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
-        with404 project $ S.html . renderHtml . ProjectViews.show_
+        with404 project ProjectViews.show_
 
     S.get "/projects/:id/edit" $ authorized $ \session -> do
         id_ <- S.param "id"
         project <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
-        with404 project $ S.html . renderHtml . ProjectViews.edit
+        with404 project ProjectViews.edit
 
     S.put "/projects/:id" $ authorized $ \session -> do
         id_ <- S.param "id"
@@ -44,7 +43,7 @@ app conn = do
             S.redirect "/projects"
 
     S.get "/projects/new" $ authorized $ \_ -> do
-        S.html $ renderHtml ProjectViews.new
+        ProjectViews.new
 
     S.post "/projects" $ authorized $ \session -> do
         name <- S.param "name"

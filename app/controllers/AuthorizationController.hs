@@ -19,7 +19,6 @@ import           Network.HTTP.Simple (getResponseBody, httpJSON, parseRequest, s
 import           Network.HTTP.Types (renderSimpleQuery)
 import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, fetchAccessToken, idToken, idtoken)
 import           Network.OAuth.OAuth2.TokenRequest (Errors)
-import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import           URI.ByteString (Absolute, URIRef, serializeURIRef')
 import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
@@ -72,7 +71,7 @@ app conn mgr appContext = do
     S.get "/login" $ do
         session <- getSession
         S.liftAndCatchIO $ print session
-        S.html $ renderHtml $ AuthViews.login (getGoogleLoginUrl appContext)
+        AuthViews.login (getGoogleLoginUrl appContext)
 
     S.get "/logout" $ do
         _ <- deleteSession
