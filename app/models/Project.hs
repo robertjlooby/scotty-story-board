@@ -3,11 +3,13 @@
 
 module Project where
 
+import           Data.Monoid ((<>))
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query, query_)
 import           Database.PostgreSQL.Simple.FromField (FromField)
 import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
+import           Text.Blaze (ToValue, toValue)
 
 import           User (UserId)
 
@@ -15,6 +17,9 @@ newtype ProjectId = ProjectId Int deriving (Eq, FromField, Ord, Show, ToField)
 
 instance FromRow ProjectId where
     fromRow = ProjectId <$> field
+
+instance ToValue ProjectId where
+    toValue (ProjectId projectId) = "/projects/" <> toValue projectId
 
 data Project = Project
     { id_ :: ProjectId
@@ -24,6 +29,9 @@ data Project = Project
 
 instance FromRow Project where
     fromRow = Project <$> field <*> field <*> field
+
+instance ToValue Project where
+    toValue = toValue . id_
 
 create :: Connection -> Text -> Text -> IO ProjectId
 create conn name' description' = do
