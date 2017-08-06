@@ -5,7 +5,7 @@ module Project where
 
 import           Data.Monoid ((<>))
 import           Data.Text (Text)
-import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query, query_)
+import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query)
 import           Database.PostgreSQL.Simple.FromField (FromField)
 import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
@@ -72,10 +72,6 @@ update :: Connection -> Project -> IO ()
 update conn project = do
     _ <- execute conn "UPDATE projects SET name = ?, description = ? WHERE id = ?" (name project, description project, id_ project)
     return ()
-
-findAll :: Connection -> IO [Project]
-findAll conn =
-    query_ conn "SELECT id, name, description FROM projects"
 
 delete :: Connection -> ProjectId -> IO ()
 delete conn projectId = do

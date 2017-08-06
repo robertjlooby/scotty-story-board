@@ -60,12 +60,6 @@ spec conn = describe "Project" $ do
         found <- P.find conn (P.id_ project)
         found `shouldBe` (Just updated)
 
-    it "can find all projects" $ do
-        project1 <- P.create conn "project1" ""
-        project2 <- P.create conn "project2" ""
-        found <- P.findAll conn
-        found `shouldBe` [project1, project2]
-
     it "can delete by id" $ do
         project <- P.create conn "project" "description"
         _ <- P.delete conn (P.id_ project)
