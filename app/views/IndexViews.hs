@@ -4,11 +4,12 @@ module IndexViews (index) where
 
 import           Text.Blaze.Html5 as H
 import           Text.Blaze.Html5.Attributes
+import qualified Web.Scotty as S
 
 import qualified Layouts
 import           Session (Session)
 
-index :: Maybe Session -> Html
+index :: Maybe Session -> S.ActionM ()
 index session = Layouts.app $ do
     H.div ! class_ "container" $ do
         H.div ! class_ "row" $ do

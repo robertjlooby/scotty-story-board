@@ -21,7 +21,6 @@ import           Network.HTTP.Types.Header (hCookie)
 import           Network.HTTP.Types.Status (notFound404, unauthorized401)
 import           Network.Wai (Middleware, requestHeaders, vault)
 import           System.IO.Unsafe
-import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import           Web.ClientSession (decrypt, encryptIO)
 import qualified Web.ClientSession as CS
 import           Web.Cookie (def, parseCookies, setCookieName, setCookiePath, setCookieValue)
@@ -88,7 +87,7 @@ authorized action = do
       Just loggedInSession -> action loggedInSession
       Nothing -> do
           S.status unauthorized401
-          S.html $ renderHtml $ ErrorViews.unauthorized
+          ErrorViews.unauthorized
 
 with404 :: Maybe a -> (a -> S.ActionM ()) -> S.ActionM ()
 with404 maybeEntity handler =
