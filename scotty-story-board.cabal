@@ -30,6 +30,7 @@ executable web
                      , AppContext
                      , Auth
                      , AuthViews
+                     , ErrorViews
                      , Index
                      , IndexViews
                      , Layouts
@@ -74,6 +75,7 @@ test-suite test
                      , AppContext
                      , Auth
                      , AuthViews
+                     , ErrorViews
                      , Helpers
                      , Index
                      , IndexSpec
