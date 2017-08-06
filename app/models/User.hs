@@ -1,7 +1,18 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module User where
+module User
+    (
+    -- * Types
+      User
+    , UserId(..)
+    -- * Accessors
+    , id_
+    -- * Queries
+    , create
+    , find
+    , findByName
+    ) where
 
 import           Data.Aeson (FromJSON, ToJSON)
 import           Data.Text (Text)
