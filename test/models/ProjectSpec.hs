@@ -55,7 +55,7 @@ spec conn = describe "Project" $ do
 
     it "can update a project" $ do
         project <- P.create conn "name" "desc"
-        let updated = P.Project (P.id_ project) "new name" "new desc"
+        let updated = project {P.name = "new name", P.description = "new desc"}
         _ <- P.update conn updated
         found <- P.find conn (P.id_ project)
         found `shouldBe` (Just updated)
