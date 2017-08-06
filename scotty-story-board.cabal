@@ -42,6 +42,7 @@ executable web
   build-depends:       aeson
                      , base
                      , blaze-html
+                     , blaze-markup
                      , bytestring
                      , clientsession
                      , cookie
@@ -91,6 +92,7 @@ test-suite test
                      , base
                      , base64-bytestring
                      , blaze-html
+                     , blaze-markup
                      , bytestring
                      , clientsession
                      , cookie
