@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module AppSpec where
+module ProjectsControllerSpec where
 
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS
@@ -10,9 +10,9 @@ import           Test.Hspec (Spec, describe, it, shouldBe)
 import           Test.Hspec.Wai (WaiSession, delete, get, liftIO, post, put, shouldRespondWith, with)
 import qualified Web.Scotty as S
 
-import           App (app)
 import           Helpers (delete', get', postHtmlForm', putHtmlForm', run, withSession)
 import qualified Project as P
+import           ProjectsController (app)
 import           Session (Session(Session))
 import qualified User as U
 

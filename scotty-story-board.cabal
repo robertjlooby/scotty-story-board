@@ -23,20 +23,21 @@ executable migrate
 
 executable web
   hs-source-dirs:      app
+                     , app/controllers
                      , app/models
                      , app/views
   main-is:             Main.hs
-  other-modules:       App
-                     , AppContext
-                     , Auth
+  other-modules:        AppContext
+                     , AuthorizationController
                      , AuthViews
                      , ErrorViews
-                     , Index
+                     , IndexController
                      , IndexViews
                      , Layouts
                      , OAuthLogin
                      , Project
                      , ProjectViews
+                     , ProjectsController
                      , Session
                      , User
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
@@ -66,19 +67,19 @@ test-suite test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
                      , app
+                     , app/controllers
                      , app/models
                      , app/views
+                     , test/controllers
                      , test/models
   main-is:             Spec.hs
-  other-modules:       App
-                     , AppSpec
-                     , AppContext
-                     , Auth
+  other-modules:       AppContext
+                     , AuthorizationController
                      , AuthViews
                      , ErrorViews
                      , Helpers
-                     , Index
-                     , IndexSpec
+                     , IndexController
+                     , IndexControllerSpec
                      , IndexViews
                      , Layouts
                      , OAuthLogin
@@ -86,6 +87,8 @@ test-suite test
                      , Project
                      , ProjectSpec
                      , ProjectViews
+                     , ProjectsController
+                     , ProjectsControllerSpec
                      , Session
                      , User
                      , UserSpec

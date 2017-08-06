@@ -12,10 +12,10 @@ import           Network.Wai.Middleware.Static (addBase, staticPolicy)
 import           System.Environment (getEnv)
 import qualified Web.Scotty as S
 
-import qualified App
 import           AppContext (getContext, environment, port)
-import qualified Auth
-import qualified Index
+import qualified AuthorizationController
+import qualified IndexController
+import qualified ProjectsController
 import           Session (sessionMiddleware)
 
 sslMiddleware :: String -> S.ScottyM ()
@@ -34,6 +34,6 @@ main = do
         S.middleware $ staticPolicy (addBase "app/static")
         S.middleware sessionMiddleware
 
-        Index.app
-        Auth.app conn mgr appContext
-        App.app conn
+        IndexController.app
+        AuthorizationController.app conn mgr appContext
+        ProjectsController.app conn

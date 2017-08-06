@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module App where
+module ProjectsController where
 
 import qualified Data.Text.Lazy as T
 import           Database.PostgreSQL.Simple (Connection)
