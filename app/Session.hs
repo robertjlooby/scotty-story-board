@@ -9,6 +9,7 @@ module Session
     , sessionMiddleware
     , setSession
     , vaultKey
+    , with404
     ) where
 
 import           Data.Aeson (FromJSON, ToJSON, encode, decodeStrict, defaultOptions, genericToEncoding, toEncoding)
@@ -17,7 +18,7 @@ import           Data.String (IsString)
 import qualified Data.Vault.Lazy as Vault
 import           GHC.Generics (Generic)
 import           Network.HTTP.Types.Header (hCookie)
-import           Network.HTTP.Types.Status (unauthorized401)
+import           Network.HTTP.Types.Status (notFound404, unauthorized401)
 import           Network.Wai (Middleware, requestHeaders, vault)
 import           System.IO.Unsafe
 import           Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -88,3 +89,9 @@ authorized action = do
       Nothing -> do
           S.status unauthorized401
           S.html $ renderHtml $ ErrorViews.unauthorized
+
+with404 :: Maybe a -> (a -> S.ActionM ()) -> S.ActionM ()
+with404 maybeEntity handler =
+    case maybeEntity of
+        Just entity -> handler entity
+        Nothing -> S.status notFound404
