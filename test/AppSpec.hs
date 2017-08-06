@@ -96,7 +96,7 @@ spec conn = with (S.scottyApp $ app conn) $ do
             run (withSession session request) `shouldRespondWith` 302
 
             found <- liftIO $ P.find conn (P.id_ project)
-            liftIO $ found `shouldBe` (Just $ P.Project (P.id_ project) "new name" "new desc")
+            liftIO $ found `shouldBe` (Just $ project {P.name = "new name", P.description = "new desc"})
 
         it "responds with a 404 for a project the user is not linked to" $ do
             (_, session) <- createUser conn

@@ -36,10 +36,10 @@ app conn = do
         id_ <- S.param "id"
         name <- S.param "name"
         description <- S.param "description"
-        project <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
-        case project of
-            Just _ -> do
-                _ <- S.liftAndCatchIO $ P.update conn $ P.Project (P.ProjectId id_) name description
+        projectM <- S.liftAndCatchIO $ P.findByUserId conn (userId session) (P.ProjectId id_)
+        case projectM of
+            Just project -> do
+                _ <- S.liftAndCatchIO $ P.update conn $ project {P.name = name, P.description = description}
                 S.redirect $ T.pack ("/projects/" ++ show id_)
             Nothing -> S.status notFound404
 

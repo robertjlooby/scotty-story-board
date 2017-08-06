@@ -1,7 +1,25 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module Project where
+module Project
+    (
+    -- * Types
+      Project
+    , ProjectId(..)
+    -- * Accessors
+    , id_
+    , name
+    , description
+    -- * Queries
+    , create
+    , find
+    , findByName
+    , findByUserId
+    , allByUserId
+    , addUser
+    , update
+    , delete
+    ) where
 
 import           Data.Monoid ((<>))
 import           Data.Text (Text)
