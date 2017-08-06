@@ -33,10 +33,10 @@ instance FromRow Project where
 instance ToValue Project where
     toValue = toValue . id_
 
-create :: Connection -> Text -> Text -> IO ProjectId
+create :: Connection -> Text -> Text -> IO Project
 create conn name' description' = do
-    [projectId] <- query conn "INSERT INTO projects (name, description) VALUES (?, ?) RETURNING id" (name', description')
-    return projectId
+    [project] <- query conn "INSERT INTO projects (name, description) VALUES (?, ?) RETURNING *" (name', description')
+    return project
 
 addUser :: Connection -> ProjectId -> UserId -> IO ()
 addUser conn projectId userId = do

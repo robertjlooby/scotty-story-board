@@ -58,6 +58,6 @@ app conn = do
     S.post "/projects" $ authorized $ \session -> do
         name <- S.param "name"
         description <- S.param "description"
-        projectId <- S.liftAndCatchIO $ P.create conn name description
-        _ <- S.liftAndCatchIO $ P.addUser conn projectId (userId session)
+        project <- S.liftAndCatchIO $ P.create conn name description
+        _ <- S.liftAndCatchIO $ P.addUser conn (P.id_ project) (userId session)
         S.redirect "/projects"
