@@ -1,6 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module OAuthLogin where
+module OAuthLogin
+    (
+    -- * Queries
+      create
+    , findUser
+    ) where
 
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection, execute, query)
