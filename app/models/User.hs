@@ -24,10 +24,10 @@ data User = User
 instance FromRow User where
     fromRow = User <$> field <*> field <*> field
 
-create :: Connection -> Text -> Text -> IO UserId
+create :: Connection -> Text -> Text -> IO User
 create conn name' email' = do
-    [userId] <- query conn "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id" (name', email')
-    return userId
+    [user] <- query conn "INSERT INTO users (name, email) VALUES (?, ?) RETURNING *" (name', email')
+    return user
 
 find :: Connection -> UserId -> IO (Maybe User)
 find conn (UserId userId) = do
