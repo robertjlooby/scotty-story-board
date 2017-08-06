@@ -20,12 +20,14 @@ import           Network.HTTP.Types.Header (hCookie)
 import           Network.HTTP.Types.Status (unauthorized401)
 import           Network.Wai (Middleware, requestHeaders, vault)
 import           System.IO.Unsafe
+import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import           Web.ClientSession (decrypt, encryptIO)
 import qualified Web.ClientSession as CS
 import           Web.Cookie (def, parseCookies, setCookieName, setCookiePath, setCookieValue)
 import qualified Web.Scotty as S
 import           Web.Scotty.Cookie (deleteCookie, setCookie)
 
+import qualified ErrorViews
 import           User (UserId)
 
 data Session = Session
@@ -83,4 +85,6 @@ authorized action = do
     session <- getSession
     case session of
       Just loggedInSession -> action loggedInSession
-      Nothing -> S.status unauthorized401
+      Nothing -> do
+          S.status unauthorized401
+          S.html $ renderHtml $ ErrorViews.unauthorized
