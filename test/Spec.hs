@@ -13,6 +13,7 @@ import qualified OAuthLoginSpec
 import qualified ProjectSpec
 import qualified ProjectsControllerSpec
 import qualified UserSpec
+import qualified UsersControllerSpec
 
 main :: IO ()
 main = do
@@ -23,3 +24,4 @@ main = do
         ProjectSpec.spec conn
         ProjectsControllerSpec.spec conn
         UserSpec.spec conn
+        UsersControllerSpec.spec conn

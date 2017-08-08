@@ -18,6 +18,7 @@ index projects = Layouts.app $ do
                 ul $ do
                     mapM_ showProject projects
                 p . (a ! href "/projects/new") $ "New"
+                p . (a ! href "/") $ "Home"
   where
     showProject project = do
         (li . (a ! href (toValue project)) . toHtml . P.name) project
@@ -51,7 +52,7 @@ new = Layouts.app $ do
                     H.label ! for "description" $ toHtml ("Description: " :: String)
                     input ! class_ "u-full-width" ! type_ "text" ! name "description"
             H.div ! class_ "row" $ do
-                a ! class_ "button"! href "/projects" $ "Cancel"
+                a ! class_ "button" ! href "/projects" $ "Cancel"
                 input ! class_ "button-primary" ! type_ "submit" ! value "Submit"
 
 edit :: P.Project -> S.ActionM ()
@@ -67,5 +68,5 @@ edit project = Layouts.app $ do
                     H.label ! for "description" $ toHtml ("Description: " :: String)
                     input ! class_ "u-full-width" ! type_ "text" ! name "description" ! value (toValue . P.description $ project)
             H.div ! class_ "row" $ do
-                a ! class_ "button"! href (toValue project) $ "Cancel"
+                a ! class_ "button" ! href (toValue project) $ "Cancel"
                 input ! class_ "button-primary" ! type_ "submit" ! value "Submit"

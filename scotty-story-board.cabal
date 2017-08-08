@@ -40,6 +40,8 @@ executable web
                      , ProjectsController
                      , Session
                      , User
+                     , UserViews
+                     , UsersController
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       aeson
                      , base
@@ -92,6 +94,9 @@ test-suite test
                      , Session
                      , User
                      , UserSpec
+                     , UserViews
+                     , UsersController
+                     , UsersControllerSpec
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       aeson
                      , base

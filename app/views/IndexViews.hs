@@ -2,12 +2,14 @@
 
 module IndexViews (index) where
 
+import           Data.Monoid ((<>))
+import           Text.Blaze (toValue)
 import           Text.Blaze.Html5 as H
 import           Text.Blaze.Html5.Attributes
 import qualified Web.Scotty as S
 
 import qualified Layouts
-import           Session (Session)
+import           Session (Session, userId)
 
 index :: Maybe Session -> S.ActionM ()
 index session = Layouts.app $ do
@@ -15,8 +17,10 @@ index session = Layouts.app $ do
         H.div ! class_ "row" $ do
             H.div ! class_ "six columns" $ do
                 h2 "Hello!"
-                loginLogoutLink session
-                p . (a ! href "/projects") $ "All Projects"
+                links session
   where
-    loginLogoutLink Nothing = p . (a ! href "/login") $ "Login"
-    loginLogoutLink (Just _) = p . (a ! href "/logout") $ "Logout"
+    links Nothing = p . (a ! href "/login") $ "Login"
+    links (Just session') = do
+        p . (a ! href "/logout") $ "Logout"
+        p . (a ! href "/projects") $ "All Projects"
+        p . (a ! href ((toValue (userId session')) <> "/edit")) $ "Edit user"
