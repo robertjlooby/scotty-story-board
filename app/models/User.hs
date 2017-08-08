@@ -8,23 +8,31 @@ module User
     , UserId(..)
     -- * Accessors
     , id_
+    , name
+    , email
     -- * Queries
     , create
     , find
     , findByName
+    , update
     ) where
 
 import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Monoid ((<>))
 import           Data.Text (Text)
-import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), query)
+import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query)
 import           Database.PostgreSQL.Simple.FromField (FromField)
 import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
+import           Text.Blaze (ToValue, toValue)
 
 newtype UserId = UserId Int deriving (Eq, FromField, FromJSON, Ord, Show, ToField, ToJSON)
 
 instance FromRow UserId where
     fromRow = UserId <$> field
+
+instance ToValue UserId where
+    toValue (UserId userId) = "/users/" <> toValue userId
 
 data User = User
     { id_ :: UserId
@@ -34,6 +42,9 @@ data User = User
 
 instance FromRow User where
     fromRow = User <$> field <*> field <*> field
+
+instance ToValue User where
+    toValue = toValue . id_
 
 create :: Connection -> Text -> Text -> IO User
 create conn name' email' = do
@@ -53,3 +64,8 @@ findByName conn userName = do
     case users of
         [user] -> return $ Just user
         _      -> return Nothing
+
+update :: Connection -> User -> IO ()
+update conn user = do
+    _ <- execute conn "UPDATE users SET name = ?, email = ? WHERE id = ?" (name user, email user, id_ user)
+    return ()

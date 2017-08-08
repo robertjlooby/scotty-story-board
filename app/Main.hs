@@ -17,6 +17,7 @@ import qualified AuthorizationController
 import qualified IndexController
 import qualified ProjectsController
 import           Session (sessionMiddleware)
+import qualified UsersController
 
 sslMiddleware :: String -> S.ScottyM ()
 sslMiddleware "production" = S.middleware forceSSL
@@ -37,3 +38,4 @@ main = do
         IndexController.app
         AuthorizationController.app conn mgr appContext
         ProjectsController.app conn
+        UsersController.app conn
