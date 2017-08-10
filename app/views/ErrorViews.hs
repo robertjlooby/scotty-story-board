@@ -23,3 +23,11 @@ notFound = Layouts.app $ do
             H.div ! class_ "six columns" $ do
                 h2 "Not Found"
                 p . (a ! href "/") $ "Home"
+
+serverError :: S.ActionM ()
+serverError = Layouts.app $ do
+    H.div ! class_ "container" $ do
+        H.div ! class_ "row" $ do
+            H.div ! class_ "six columns" $ do
+                h2 "Oops! Something went wrong!"
+                p . (a ! href "/") $ "Home"
