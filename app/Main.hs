@@ -14,6 +14,7 @@ import qualified Web.Scotty as S
 
 import           AppContext (getContext, environment, port)
 import qualified AuthorizationController
+import qualified ErrorViews
 import qualified IndexController
 import qualified ProjectsController
 import           Session (sessionMiddleware)
@@ -39,3 +40,4 @@ main = do
         AuthorizationController.app conn mgr appContext
         ProjectsController.app conn
         UsersController.app conn
+        S.notFound ErrorViews.notFound
