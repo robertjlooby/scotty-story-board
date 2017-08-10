@@ -2,6 +2,7 @@
 
 module Main where
 
+import           Control.Logging (withStdoutLogging)
 import qualified Data.ByteString.Char8 as BS8
 import           Database.PostgreSQL.Simple (connectPostgreSQL)
 import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
@@ -19,13 +20,14 @@ import qualified IndexController
 import qualified ProjectsController
 import           Session (sessionMiddleware)
 import qualified UsersController
+import           Util (logError)
 
 sslMiddleware :: String -> S.ScottyM ()
 sslMiddleware "production" = S.middleware forceSSL
 sslMiddleware _ = return ()
 
 main :: IO ()
-main = do
+main = withStdoutLogging $ do
     appContext <- getContext
     conn <- BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL
     mgr <- newManager tlsManagerSettings
@@ -36,7 +38,7 @@ main = do
         S.middleware $ staticPolicy (addBase "app/static")
         S.middleware sessionMiddleware
         S.defaultHandler $ \errorMessage -> do
-            S.liftAndCatchIO $ putStrLn (show errorMessage)
+            logError errorMessage
             ErrorViews.serverError
 
         IndexController.app

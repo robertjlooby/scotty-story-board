@@ -26,9 +26,10 @@ import qualified Web.Scotty as S
 import           AppContext (AppContext, environment, googleClientId, googleClientSecret)
 import qualified AuthViews
 import qualified OAuthLogin
-import           Session (Session(Session), deleteSession, getSession, setSession)
+import           Session (Session(Session), deleteSession, setSession)
 import qualified User
 import           User (User)
+import           Util (logError)
 
 googleKey :: AppContext -> OAuth2
 googleKey appContext = OAuth2 { oauthClientId = E.decodeUtf8 $ googleClientId appContext
@@ -69,8 +70,6 @@ instance FromJSON GoogleInfo
 app :: Connection -> Manager -> AppContext -> S.ScottyM ()
 app conn mgr appContext = do
     S.get "/login" $ do
-        session <- getSession
-        S.liftAndCatchIO $ print session
         AuthViews.login (getGoogleLoginUrl appContext)
 
     S.get "/logout" $ do
@@ -87,7 +86,7 @@ app conn mgr appContext = do
                 _ <- setSession session
                 S.redirect "/"
             Left errors -> do
-                S.liftAndCatchIO $ print errors
+                logError $ show errors
                 S.redirect "/"
 
 getGoogleInfo :: Manager -> AppContext -> Text -> IO (Either (OAuth2Error Errors) GoogleInfo)
