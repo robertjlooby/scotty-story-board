@@ -35,9 +35,13 @@ main = do
         sslMiddleware (environment appContext)
         S.middleware $ staticPolicy (addBase "app/static")
         S.middleware sessionMiddleware
+        S.defaultHandler $ \errorMessage -> do
+            S.liftAndCatchIO $ putStrLn (show errorMessage)
+            ErrorViews.serverError
 
         IndexController.app
         AuthorizationController.app conn mgr appContext
         ProjectsController.app conn
         UsersController.app conn
+
         S.notFound ErrorViews.notFound
