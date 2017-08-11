@@ -32,12 +32,13 @@ import           User (User)
 import           Util (logError)
 
 googleKey :: AppContext -> OAuth2
-googleKey appContext = OAuth2 { oauthClientId = E.decodeUtf8 $ googleClientId appContext
-                              , oauthClientSecret = E.decodeUtf8 $ googleClientSecret appContext
-                              , oauthCallback = Just (googleCallback (environment appContext))
-                              , oauthOAuthorizeEndpoint = [uri|https://accounts.google.com/o/oauth2/auth|]
-                              , oauthAccessTokenEndpoint = [uri|https://www.googleapis.com/oauth2/v4/token|]
-                              }
+googleKey appContext = OAuth2
+    { oauthClientId = E.decodeUtf8 $ googleClientId appContext
+    , oauthClientSecret = E.decodeUtf8 $ googleClientSecret appContext
+    , oauthCallback = Just . googleCallback $ environment appContext
+    , oauthOAuthorizeEndpoint = [uri|https://accounts.google.com/o/oauth2/auth|]
+    , oauthAccessTokenEndpoint = [uri|https://www.googleapis.com/oauth2/v4/token|]
+    }
 
 getGoogleLoginUrl :: AppContext -> ByteString
 getGoogleLoginUrl appContext =
@@ -57,7 +58,7 @@ googleCallback "production" = [uri|https://scotty-story-board.herokuapp.com/oaut
 googleCallback _            = [uri|http://localhost:3000/oauth/google|]
 
 googleRedirectUri :: String -> ByteString
-googleRedirectUri env = serializeURIRef' (googleCallback env)
+googleRedirectUri = serializeURIRef' . googleCallback
 
 data GoogleInfo = GoogleInfo
     { sub :: T.Text
@@ -77,13 +78,12 @@ app conn mgr appContext = do
         S.redirect "/login"
 
     S.get "/oauth/google" $ do
-        code <- S.param "code" :: S.ActionM T.Text
+        code <- S.param "code"
         googleInfoResult <- S.liftAndCatchIO $ getGoogleInfo mgr appContext code
         case googleInfoResult of
             Right googleInfo -> do
                 user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
-                let session = Session (User.id_ user)
-                _ <- setSession session
+                _ <- setSession . Session . User.id_ $ user
                 S.redirect "/"
             Left errors -> do
                 logError $ show errors
@@ -97,8 +97,8 @@ getGoogleInfo mgr appContext code = do
             (Just jwt) <- return . idToken $ token
             req <- parseRequest "https://www.googleapis.com/oauth2/v3/tokeninfo"
             resp <- httpJSON (setRequestQueryString [("id_token", Just (E.encodeUtf8 $ idtoken jwt))] req)
-            return $ Right $ getResponseBody resp
-        Left errors -> return $ Left errors
+            return . Right $ getResponseBody resp
+        Left errors -> return . Left $ errors
 
 getOrCreateUser :: Connection -> GoogleInfo -> IO User
 getOrCreateUser conn googleInfo = do
