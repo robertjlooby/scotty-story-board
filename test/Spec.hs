@@ -8,6 +8,7 @@ import           Database.PostgreSQL.Simple.Util (withTransactionRolledBack)
 import           Test.Hspec (around_, hspec)
 import           System.Environment (getEnv)
 
+import           AppContext (getContext)
 import qualified IndexControllerSpec
 import qualified OAuthLoginSpec
 import qualified ProjectSpec
@@ -18,6 +19,7 @@ import qualified UsersControllerSpec
 
 main :: IO ()
 main = do
+    _ <- getContext "test"
     conn <- BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL
     hspec $ around_ (withTransactionRolledBack conn) $ do
         IndexControllerSpec.spec

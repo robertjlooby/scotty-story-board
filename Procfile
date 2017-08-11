@@ -1,1 +1,1 @@
-web: migrate && web
+web: migrate production && web

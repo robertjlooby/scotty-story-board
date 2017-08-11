@@ -28,7 +28,7 @@ sslMiddleware _ = return ()
 
 main :: IO ()
 main = withStdoutLogging $ do
-    appContext <- getContext
+    appContext <- getContext "development"
     conn <- BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL
     mgr <- newManager tlsManagerSettings
     S.scotty (port appContext) $ do

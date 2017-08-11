@@ -32,7 +32,7 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-stack-cache-{{ checksum "stack.yaml" }}-{{ checksum "scotty-story-board.cabal" }}
-      - run: stack exec migrate
+      - run: stack exec migrate test
       - run: stack test
 
 workflows:
