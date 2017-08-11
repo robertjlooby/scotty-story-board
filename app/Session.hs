@@ -44,7 +44,7 @@ sessionCookieName = "session"
 
 setSession :: Session -> S.ActionM ()
 setSession session = do
-    encrypted <- S.liftAndCatchIO $ encryptIO sessionKey (BSL.toStrict . encode $ session)
+    encrypted <- S.liftAndCatchIO . encryptIO sessionKey . BSL.toStrict . encode $ session
     let cookie = def { setCookieName = sessionCookieName
                      , setCookieValue = encrypted
                      , setCookiePath = Just "/"
@@ -75,7 +75,7 @@ sessionMiddleware app request =
 getSession :: S.ActionM (Maybe Session)
 getSession = do
     request <- S.request
-    return $ Vault.lookup vaultKey (vault request)
+    return . Vault.lookup vaultKey $ vault request
 
 deleteSession :: S.ActionM ()
 deleteSession = deleteCookie sessionCookieName
