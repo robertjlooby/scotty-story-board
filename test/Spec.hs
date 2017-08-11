@@ -12,6 +12,7 @@ import qualified IndexControllerSpec
 import qualified OAuthLoginSpec
 import qualified ProjectSpec
 import qualified ProjectsControllerSpec
+import qualified SessionSpec
 import qualified UserSpec
 import qualified UsersControllerSpec
 
@@ -23,5 +24,6 @@ main = do
         OAuthLoginSpec.spec conn
         ProjectSpec.spec conn
         ProjectsControllerSpec.spec conn
+        SessionSpec.spec
         UserSpec.spec conn
         UsersControllerSpec.spec conn

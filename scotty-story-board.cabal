@@ -95,6 +95,7 @@ test-suite test
                      , ProjectsController
                      , ProjectsControllerSpec
                      , Session
+                     , SessionSpec
                      , User
                      , UserSpec
                      , UserViews
@@ -123,6 +124,7 @@ test-suite test
                      , scotty
                      , scotty-cookie
                      , text
+                     , transformers
                      , uri-bytestring
                      , vault
                      , wai

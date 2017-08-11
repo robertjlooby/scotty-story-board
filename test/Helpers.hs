@@ -4,10 +4,14 @@
 module Helpers where
 
 import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Trans.Except (runExceptT)
+import           Control.Monad.Trans.Reader (runReaderT)
+import           Control.Monad.Trans.State.Lazy (evalStateT)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Char8 as LB8
 import           Data.List (intersperse)
+import           Data.Text.Lazy (Text)
 import qualified Data.Vault.Lazy as Vault
 import           Network.HTTP.Types (Header, Method, hContentType, methodDelete, methodGet, methodOptions, methodPatch, methodPost, methodPut)
 import           Network.URI (escapeURIString, isUnescapedInURI)
@@ -15,6 +19,8 @@ import           Network.Wai (Request(..), vault)
 import           Network.Wai.Test (SRequest(..), SResponse, defaultRequest, runSession, setPath, srequest)
 import           Test.Hspec.Wai (WaiSession)
 import           Test.Hspec.Wai.Internal (getApp)
+import qualified Web.Scotty as S
+import           Web.Scotty.Internal.Types (ActionEnv(..), ActionError, ScottyResponse, runAM)
 
 import           Session (Session, vaultKey)
 
@@ -55,6 +61,20 @@ withSession session request = request {simpleRequest = withSessionSet}
   where
       req = simpleRequest request
       withSessionSet = req { vault = Vault.insert vaultKey session (vault req) }
+
+runActionM :: ActionEnv -> ScottyResponse -> S.ActionM a -> IO (Either (ActionError Text) a)
+runActionM env response action =
+    evalStateT state response
+  where
+    reader = runExceptT $ runAM action
+    state = runReaderT reader env
+
+makeEnv :: Request -> ActionEnv
+makeEnv req =
+    Env req [] emptyBS emptyBS' []
+  where
+    emptyBS = return ""
+    emptyBS' = return ""
 
 -- From cgi lib
 -- | Formats name-value pairs as application\/x-www-form-urlencoded.
