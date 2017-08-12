@@ -3,14 +3,11 @@
 module Main where
 
 import           Control.Logging (withStdoutLogging)
-import qualified Data.ByteString.Char8 as BS8
-import           Database.PostgreSQL.Simple (connectPostgreSQL)
 import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import           Network.Wai.Middleware.ForceSSL (forceSSL)
 import           Network.Wai.Middleware.MethodOverridePost (methodOverridePost)
 import           Network.Wai.Middleware.RequestLogger (logStdout)
 import           Network.Wai.Middleware.Static (addBase, staticPolicy)
-import           System.Environment (getEnv)
 import qualified Web.Scotty as S
 
 import           AppContext (getContext, environment, port)
@@ -29,7 +26,6 @@ sslMiddleware _ = return ()
 main :: IO ()
 main = withStdoutLogging $ do
     appContext <- getContext "development"
-    conn <- BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL
     mgr <- newManager tlsManagerSettings
     S.scotty (port appContext) $ do
         S.middleware methodOverridePost
@@ -42,8 +38,8 @@ main = withStdoutLogging $ do
             ErrorViews.serverError
 
         IndexController.app
-        AuthorizationController.app conn mgr appContext
-        ProjectsController.app conn
-        UsersController.app conn
+        AuthorizationController.app mgr appContext
+        ProjectsController.app appContext
+        UsersController.app appContext
 
         S.notFound ErrorViews.notFound

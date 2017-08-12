@@ -3,17 +3,18 @@
 module UsersController where
 
 import qualified Data.Text.Lazy as T
-import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types.Status (notFound404)
 import qualified Web.Scotty as S
 
+import           AppContext (HasDbConn(..))
 import qualified ErrorViews
 import qualified User as U
 import qualified UserViews
 import           Session (authorized, userId)
 
-app :: Connection -> S.ScottyM ()
-app conn = do
+app :: HasDbConn a => a -> S.ScottyM ()
+app context = do
+    let conn = getDbConn context
     S.get "/users/:id/edit" $ authorized $ \session -> do
         id_ <- S.param "id"
         if userId session == (U.UserId id_)
