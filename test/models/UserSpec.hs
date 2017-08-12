@@ -2,13 +2,14 @@
 
 module UserSpec (spec) where
 
-import            Database.PostgreSQL.Simple (Connection)
-import            Test.Hspec (Spec, describe, it, shouldBe)
+import           Test.Hspec (Spec, describe, it, shouldBe)
 
-import qualified  User as U
+import           AppContext (HasDbConn(..))
+import qualified User as U
 
-spec :: Connection -> Spec
-spec conn = describe "User" $ do
+spec :: HasDbConn a => a -> Spec
+spec context = describe "User" $ do
+    let conn = getDbConn context
     it "can find by id" $ do
         user <- U.create conn "user" "email"
         found <- U.find conn (U.id_ user)

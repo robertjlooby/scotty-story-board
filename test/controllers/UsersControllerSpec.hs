@@ -10,13 +10,15 @@ import           Test.Hspec (Spec, describe, it, shouldBe)
 import           Test.Hspec.Wai (WaiSession, get, liftIO, put, shouldRespondWith, with)
 import qualified Web.Scotty as S
 
+import           AppContext (HasDbConn(..))
 import           Helpers (get', putHtmlForm', run, withSession)
 import           Session (Session(..))
 import qualified User as U
 import           UsersController (app)
 
-spec :: Connection -> Spec
-spec conn = with (S.scottyApp $ app conn) $ do
+spec :: HasDbConn a => a -> Spec
+spec context = with (S.scottyApp $ app context) $ do
+    let conn = getDbConn context
     describe "all uesrs routes respond with a 401 if not logged in" $ do
         it "GET /users/:id/edit" $ do
             get "/users/0/edit" `shouldRespondWith` 401
