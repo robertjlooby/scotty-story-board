@@ -23,7 +23,7 @@ import           URI.ByteString (Absolute, URIRef, serializeURIRef')
 import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
 
-import           AppContext (AppContext, HasDbConn(..), environment, googleClientId, googleClientSecret)
+import           AppContext (AppContext, getDbConn, getEnvironment, getGoogleClientId, getGoogleClientSecret)
 import qualified AuthViews
 import qualified OAuthLogin
 import           Session (Session(Session), deleteSession, setSession)
@@ -33,9 +33,9 @@ import           Util (logError)
 
 googleKey :: AppContext -> OAuth2
 googleKey appContext = OAuth2
-    { oauthClientId = E.decodeUtf8 $ googleClientId appContext
-    , oauthClientSecret = E.decodeUtf8 $ googleClientSecret appContext
-    , oauthCallback = Just . googleCallback $ environment appContext
+    { oauthClientId = E.decodeUtf8 $ getGoogleClientId appContext
+    , oauthClientSecret = E.decodeUtf8 $ getGoogleClientSecret appContext
+    , oauthCallback = Just . googleCallback $ getEnvironment appContext
     , oauthOAuthorizeEndpoint = [uri|https://accounts.google.com/o/oauth2/auth|]
     , oauthAccessTokenEndpoint = [uri|https://www.googleapis.com/oauth2/v4/token|]
     }
@@ -45,9 +45,9 @@ getGoogleLoginUrl appContext =
     googleAuthBaseUrl
         <> renderSimpleQuery
             True
-            [ ("client_id", googleClientId appContext)
+            [ ("client_id", getGoogleClientId appContext)
             , ("response_type", "code")
-            , ("redirect_uri", googleRedirectUri (environment appContext))
+            , ("redirect_uri", googleRedirectUri (getEnvironment appContext))
             , ("scope", "email profile")
             ]
   where

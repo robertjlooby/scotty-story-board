@@ -1,6 +1,9 @@
 module AppContext
-    ( AppContext(..)
+    ( AppContext
     , HasDbConn(..)
+    , HasEnvironment(..)
+    , HasGoogleApiKeys(..)
+    , HasPort(..)
     , getContext
     ) where
 
@@ -24,6 +27,25 @@ instance HasDbConn Connection where
     getDbConn = id
 instance HasDbConn AppContext where
     getDbConn = dbConn
+
+class HasEnvironment a where
+    getEnvironment :: a -> String
+instance HasEnvironment AppContext where
+    getEnvironment = environment
+
+class HasGoogleApiKeys a where
+    getGoogleClientId :: a -> BS8.ByteString
+    getGoogleClientSecret :: a -> BS8.ByteString
+instance HasGoogleApiKeys AppContext where
+    getGoogleClientId = googleClientId
+    getGoogleClientSecret = googleClientSecret
+
+class HasPort a where
+    getPort :: a -> Int
+instance HasPort Int where
+    getPort = id
+instance HasPort AppContext where
+    getPort = port
 
 getContext :: String -> IO AppContext
 getContext env = do

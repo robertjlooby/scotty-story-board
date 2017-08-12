@@ -10,7 +10,7 @@ import           Network.Wai.Middleware.RequestLogger (logStdout)
 import           Network.Wai.Middleware.Static (addBase, staticPolicy)
 import qualified Web.Scotty as S
 
-import           AppContext (getContext, environment, port)
+import           AppContext (getContext, getEnvironment, getPort)
 import qualified AuthorizationController
 import qualified ErrorViews
 import qualified IndexController
@@ -27,10 +27,10 @@ main :: IO ()
 main = withStdoutLogging $ do
     appContext <- getContext "development"
     mgr <- newManager tlsManagerSettings
-    S.scotty (port appContext) $ do
+    S.scotty (getPort appContext) $ do
         S.middleware methodOverridePost
         S.middleware logStdout
-        sslMiddleware (environment appContext)
+        sslMiddleware (getEnvironment appContext)
         S.middleware $ staticPolicy (addBase "app/static")
         S.middleware sessionMiddleware
         S.defaultHandler $ \errorMessage -> do
