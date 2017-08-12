@@ -10,14 +10,16 @@ import           Test.Hspec (Spec, describe, it, shouldBe)
 import           Test.Hspec.Wai (WaiSession, delete, get, liftIO, post, put, shouldRespondWith, with)
 import qualified Web.Scotty as S
 
+import           AppContext (HasDbConn(..))
 import           Helpers (delete', get', postHtmlForm', putHtmlForm', run, withSession)
 import qualified Project as P
 import           ProjectsController (app)
 import           Session (Session(Session))
 import qualified User as U
 
-spec :: Connection -> Spec
-spec conn = with (S.scottyApp $ app conn) $ do
+spec :: HasDbConn a => a -> Spec
+spec context = with (S.scottyApp $ app context) $ do
+    let conn = getDbConn context
     describe "all projects routes respond with a 401 if not logged in" $ do
         it "GET /projects" $ do
             get "/projects" `shouldRespondWith` 401

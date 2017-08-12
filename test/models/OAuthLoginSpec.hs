@@ -2,14 +2,15 @@
 
 module OAuthLoginSpec (spec) where
 
-import           Database.PostgreSQL.Simple (Connection)
 import           Test.Hspec (Spec, describe, it, shouldBe)
 
+import           AppContext (HasDbConn(..))
 import qualified OAuthLogin as O
 import qualified User as U
 
-spec :: Connection -> Spec
-spec conn = describe "OAuthLogin" $ do
+spec :: HasDbConn a => a -> Spec
+spec context = describe "OAuthLogin" $ do
+    let conn = getDbConn context
     it "can find user by id and provider" $ do
         user <- U.create conn "user" "email"
         _ <- O.create conn (U.id_ user) "google" "12345"

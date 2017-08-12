@@ -2,14 +2,15 @@
 
 module ProjectSpec (spec) where
 
-import           Database.PostgreSQL.Simple (Connection)
 import           Test.Hspec (Spec, describe, it, shouldBe)
 
+import            AppContext (HasDbConn(..))
 import qualified Project as P
 import qualified User as U
 
-spec :: Connection -> Spec
-spec conn = describe "Project" $ do
+spec :: HasDbConn a => a -> Spec
+spec context = describe "Project" $ do
+    let conn = getDbConn context
     it "can find by id" $ do
         project <- P.create conn "project" "description"
         found <- P.find conn (P.id_ project)

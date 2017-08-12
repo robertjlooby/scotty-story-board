@@ -2,13 +2,10 @@
 
 module Main where
 
-import qualified Data.ByteString.Char8 as BS8
-import           Database.PostgreSQL.Simple (connectPostgreSQL)
 import           Database.PostgreSQL.Simple.Util (withTransactionRolledBack)
 import           Test.Hspec (around_, hspec)
-import           System.Environment (getEnv)
 
-import           AppContext (getContext)
+import           AppContext (getContext, getDbConn)
 import qualified IndexControllerSpec
 import qualified OAuthLoginSpec
 import qualified ProjectSpec
@@ -19,13 +16,13 @@ import qualified UsersControllerSpec
 
 main :: IO ()
 main = do
-    _ <- getContext "test"
-    conn <- BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL
+    appContext <- getContext "test"
+    let conn = getDbConn appContext
     hspec $ around_ (withTransactionRolledBack conn) $ do
         IndexControllerSpec.spec
-        OAuthLoginSpec.spec conn
-        ProjectSpec.spec conn
-        ProjectsControllerSpec.spec conn
+        OAuthLoginSpec.spec appContext
+        ProjectSpec.spec appContext
+        ProjectsControllerSpec.spec appContext
         SessionSpec.spec
-        UserSpec.spec conn
-        UsersControllerSpec.spec conn
+        UserSpec.spec appContext
+        UsersControllerSpec.spec appContext
