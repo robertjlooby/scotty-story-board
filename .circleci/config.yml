@@ -1,7 +1,7 @@
 defaults: &defaults
   working_directory: ~/scotty-story-board
   docker:
-    - image: fpco/stack-build:lts-8.20
+    - image: fpco/stack-build:lts-9.0
       environment:
         DATABASE_URL: postgres://user@localhost:5432/scotty-story-board
     - image: postgres:9.6.2
