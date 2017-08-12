@@ -3,15 +3,16 @@
 module ProjectsController where
 
 import qualified Data.Text.Lazy as T
-import           Database.PostgreSQL.Simple (Connection)
 import qualified Web.Scotty as S
 
+import           AppContext (HasDbConn(..))
 import qualified Project as P
 import qualified ProjectViews
 import           Session (authorized, userId, with404)
 
-app :: Connection -> S.ScottyM ()
-app conn = do
+app :: HasDbConn a => a -> S.ScottyM ()
+app context = do
+    let conn = getDbConn context
     S.get "/projects" $ authorized $ \session -> do
         projects <- S.liftAndCatchIO $ P.allByUserId conn (userId session)
         ProjectViews.index projects

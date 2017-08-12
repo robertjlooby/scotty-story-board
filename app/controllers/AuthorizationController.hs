@@ -23,7 +23,7 @@ import           URI.ByteString (Absolute, URIRef, serializeURIRef')
 import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
 
-import           AppContext (AppContext, environment, googleClientId, googleClientSecret)
+import           AppContext (AppContext, HasDbConn(..), environment, googleClientId, googleClientSecret)
 import qualified AuthViews
 import qualified OAuthLogin
 import           Session (Session(Session), deleteSession, setSession)
@@ -68,8 +68,9 @@ data GoogleInfo = GoogleInfo
 
 instance FromJSON GoogleInfo
 
-app :: Connection -> Manager -> AppContext -> S.ScottyM ()
-app conn mgr appContext = do
+app :: Manager -> AppContext -> S.ScottyM ()
+app mgr appContext = do
+    let conn = getDbConn appContext
     S.get "/login" $ do
         AuthViews.login (getGoogleLoginUrl appContext)
 
