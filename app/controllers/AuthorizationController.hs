@@ -14,7 +14,6 @@ import           Data.Text (Text)
 import qualified Data.Text.Encoding as E
 import           Database.PostgreSQL.Simple (Connection)
 import           GHC.Generics (Generic)
-import           Network.HTTP.Conduit (Manager)
 import           Network.HTTP.Simple (getResponseBody, httpJSON, parseRequest, setRequestQueryString)
 import           Network.HTTP.Types (renderSimpleQuery)
 import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, fetchAccessToken, idToken, idtoken)
@@ -23,7 +22,7 @@ import           URI.ByteString (Absolute, URIRef, serializeURIRef')
 import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
 
-import           AppContext (AppContext, getDbConn, getEnvironment, getGoogleClientId, getGoogleClientSecret)
+import           AppContext (AppContext, getDbConn, getEnvironment, getGoogleClientId, getGoogleClientSecret, getHttpManager)
 import qualified AuthViews
 import qualified OAuthLogin
 import           Session (Session(Session), deleteSession, setSession)
@@ -68,8 +67,8 @@ data GoogleInfo = GoogleInfo
 
 instance FromJSON GoogleInfo
 
-app :: Manager -> AppContext -> S.ScottyM ()
-app mgr appContext = do
+app :: AppContext -> S.ScottyM ()
+app appContext = do
     let conn = getDbConn appContext
     S.get "/login" $ do
         AuthViews.login (getGoogleLoginUrl appContext)
@@ -80,7 +79,7 @@ app mgr appContext = do
 
     S.get "/oauth/google" $ do
         code <- S.param "code"
-        googleInfoResult <- S.liftAndCatchIO $ getGoogleInfo mgr appContext code
+        googleInfoResult <- S.liftAndCatchIO $ getGoogleInfo appContext code
         case googleInfoResult of
             Right googleInfo -> do
                 user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
@@ -90,9 +89,9 @@ app mgr appContext = do
                 logError $ show errors
                 S.redirect "/"
 
-getGoogleInfo :: Manager -> AppContext -> Text -> IO (Either (OAuth2Error Errors) GoogleInfo)
-getGoogleInfo mgr appContext code = do
-    oAuth2Result <- fetchAccessToken mgr (googleKey appContext) (ExchangeToken code)
+getGoogleInfo :: AppContext -> Text -> IO (Either (OAuth2Error Errors) GoogleInfo)
+getGoogleInfo appContext code = do
+    oAuth2Result <- fetchAccessToken (getHttpManager appContext) (googleKey appContext) (ExchangeToken code)
     case oAuth2Result of
         Right token -> do
             (Just jwt) <- return . idToken $ token

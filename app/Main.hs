@@ -3,7 +3,6 @@
 module Main where
 
 import           Control.Logging (withStdoutLogging)
-import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import           Network.Wai.Middleware.ForceSSL (forceSSL)
 import           Network.Wai.Middleware.MethodOverridePost (methodOverridePost)
 import           Network.Wai.Middleware.RequestLogger (logStdout)
@@ -26,7 +25,6 @@ sslMiddleware _ = return ()
 main :: IO ()
 main = withStdoutLogging $ do
     appContext <- getContext "development"
-    mgr <- newManager tlsManagerSettings
     S.scotty (getPort appContext) $ do
         S.middleware methodOverridePost
         S.middleware logStdout
@@ -38,7 +36,7 @@ main = withStdoutLogging $ do
             ErrorViews.serverError
 
         IndexController.app
-        AuthorizationController.app mgr appContext
+        AuthorizationController.app appContext
         ProjectsController.app appContext
         UsersController.app appContext
 
