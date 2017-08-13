@@ -7,6 +7,7 @@ module AuthorizationController
 
 import           Data.Aeson.Types (FromJSON)
 import           Data.ByteString (ByteString)
+import           Data.Function ((&))
 import qualified Data.Text as T
 import           Data.Text (Text)
 import qualified Data.Text.Encoding as E
@@ -35,8 +36,11 @@ googleKey context = OAuth2
     }
 
 getGoogleLoginUrl :: HasGoogleApiKeys a => a -> ByteString
-getGoogleLoginUrl =
-    serializeURIRef' . appendQueryParams [("scope", "email profile")] . authorizationUrl . googleKey
+getGoogleLoginUrl context =
+    googleKey context
+        & authorizationUrl
+        & appendQueryParams [("scope", "email profile")]
+        & serializeURIRef'
 
 data GoogleInfo = GoogleInfo
     { sub :: T.Text
@@ -50,7 +54,7 @@ app :: AppContext -> S.ScottyM ()
 app appContext = do
     let conn = getDbConn appContext
     S.get "/login" $ do
-        AuthViews.login (getGoogleLoginUrl appContext)
+        AuthViews.login $ getGoogleLoginUrl appContext
 
     S.get "/logout" $ do
         _ <- deleteSession
@@ -62,7 +66,7 @@ app appContext = do
         case googleInfoResult of
             Right googleInfo -> do
                 user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
-                _ <- setSession . Session . User.id_ $ user
+                _ <- setSession . Session $ User.id_ user
                 S.redirect "/"
             Left errors -> do
                 logError $ show errors
@@ -71,22 +75,28 @@ app appContext = do
 getGoogleInfo :: AppContext -> Text -> IO (OAuth2Result Errors GoogleInfo)
 getGoogleInfo appContext code = do
     oAuth2Result <- fetchAccessToken (getHttpManager appContext) (googleKey appContext) (ExchangeToken code)
+
     case (oAuth2Result, idToken <$> oAuth2Result) of
-        (Right token, Right (Just jwt)) -> do
-            let uri = appendQueryParams [("id_token", E.encodeUtf8 $ idtoken jwt)] . getGoogleTokenInfoUri $ appContext
-            authGetJSON (getHttpManager appContext) (accessToken token) uri
-        (Left errors, _) -> return . Left $ errors
-        _ -> return . Left $ parseOAuth2Error "InvalidRequest"
+        (Right token, Right (Just jwt)) ->
+            getGoogleTokenInfoUri appContext
+                & appendQueryParams [("id_token", E.encodeUtf8 $ idtoken jwt)]
+                & authGetJSON (getHttpManager appContext) (accessToken token)
+        (Left errors, _) ->
+            return $ Left errors
+        _ ->
+            return . Left $ parseOAuth2Error "InvalidRequest"
 
 getOrCreateUser :: Connection -> GoogleInfo -> IO User
 getOrCreateUser conn googleInfo = do
-    foundUser <- OAuthLogin.findUser conn "google" (sub googleInfo)
+    foundUser <- OAuthLogin.findUser conn "google" $ sub googleInfo
     case foundUser of
-      Just user -> return user
-      Nothing -> createUser conn googleInfo
+      Just user ->
+          return user
+      Nothing ->
+          createUser conn googleInfo
 
 createUser :: Connection -> GoogleInfo -> IO User
 createUser conn googleInfo = do
-    user <- User.create conn (name googleInfo) (email googleInfo)
-    _ <- OAuthLogin.create conn (User.id_ user) "google" (sub googleInfo)
+    user <- User.create conn (name googleInfo) $ email googleInfo
+    _ <- OAuthLogin.create conn (User.id_ user) "google" $ sub googleInfo
     return user
