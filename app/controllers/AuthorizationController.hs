@@ -12,8 +12,7 @@ import           Data.Text (Text)
 import qualified Data.Text.Encoding as E
 import           Database.PostgreSQL.Simple (Connection)
 import           GHC.Generics (Generic)
-import           Network.HTTP.Simple (getResponseBody, httpJSON)
-import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, appendQueryParams, authorizationUrl, fetchAccessToken, idToken, idtoken, uriToRequest)
+import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Result, appendQueryParams, authGetJSON, authorizationUrl, fetchAccessToken, idToken, idtoken, parseOAuth2Error, accessToken)
 import           Network.OAuth.OAuth2.TokenRequest (Errors)
 import           URI.ByteString (serializeURIRef')
 import qualified Web.Scotty as S
@@ -69,16 +68,15 @@ app appContext = do
                 logError $ show errors
                 S.redirect "/"
 
-getGoogleInfo :: AppContext -> Text -> IO (Either (OAuth2Error Errors) GoogleInfo)
+getGoogleInfo :: AppContext -> Text -> IO (OAuth2Result Errors GoogleInfo)
 getGoogleInfo appContext code = do
     oAuth2Result <- fetchAccessToken (getHttpManager appContext) (googleKey appContext) (ExchangeToken code)
-    case oAuth2Result of
-        Right token -> do
-            (Just jwt) <- return . idToken $ token
-            req <- uriToRequest . appendQueryParams [("id_token", E.encodeUtf8 $ idtoken jwt)] . getGoogleTokenInfoUri $ appContext
-            resp <- httpJSON req
-            return . Right $ getResponseBody resp
-        Left errors -> return . Left $ errors
+    case (oAuth2Result, idToken <$> oAuth2Result) of
+        (Right token, Right (Just jwt)) -> do
+            let uri = appendQueryParams [("id_token", E.encodeUtf8 $ idtoken jwt)] . getGoogleTokenInfoUri $ appContext
+            authGetJSON (getHttpManager appContext) (accessToken token) uri
+        (Left errors, _) -> return . Left $ errors
+        _ -> return . Left $ parseOAuth2Error "InvalidRequest"
 
 getOrCreateUser :: Connection -> GoogleInfo -> IO User
 getOrCreateUser conn googleInfo = do
