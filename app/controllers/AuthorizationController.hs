@@ -26,16 +26,16 @@ import qualified User
 import           User (User)
 import           Util (logError)
 
-googleKey :: AppContext -> OAuth2
-googleKey appContext = OAuth2
-    { oauthClientId = E.decodeUtf8 $ getGoogleClientId appContext
-    , oauthClientSecret = E.decodeUtf8 $ getGoogleClientSecret appContext
-    , oauthCallback = Just $ getGoogleRedirectUri appContext
-    , oauthOAuthorizeEndpoint = getGoogleOAuthUri appContext
-    , oauthAccessTokenEndpoint = getGoogleAccessTokenUri appContext
+googleKey :: HasGoogleApiKeys a => a -> OAuth2
+googleKey context = OAuth2
+    { oauthClientId = E.decodeUtf8 $ getGoogleClientId context
+    , oauthClientSecret = E.decodeUtf8 $ getGoogleClientSecret context
+    , oauthCallback = Just $ getGoogleRedirectUri context
+    , oauthOAuthorizeEndpoint = getGoogleOAuthUri context
+    , oauthAccessTokenEndpoint = getGoogleAccessTokenUri context
     }
 
-getGoogleLoginUrl :: AppContext -> ByteString
+getGoogleLoginUrl :: HasGoogleApiKeys a => a -> ByteString
 getGoogleLoginUrl =
     serializeURIRef' . appendQueryParams [("scope", "email profile")] . authorizationUrl . googleKey
 
