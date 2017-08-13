@@ -3,6 +3,7 @@ module AppContext
     , HasDbConn(..)
     , HasEnvironment(..)
     , HasGoogleApiKeys(..)
+    , HasHttpManager(..)
     , HasPort(..)
     , getContext
     ) where
@@ -11,6 +12,8 @@ import           Configuration.Dotenv (loadFile, onMissingFile)
 import qualified Data.ByteString.Char8 as BS8
 import           Data.Monoid ((<>))
 import           Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
+import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
+import           Network.HTTP.Client (HasHttpManager(..), Manager)
 import           System.Environment (getEnv)
 
 data AppContext = AppContext
@@ -19,6 +22,7 @@ data AppContext = AppContext
     , dbConn :: Connection
     , googleClientId :: BS8.ByteString
     , googleClientSecret :: BS8.ByteString
+    , httpManager :: Manager
     }
 
 class HasDbConn a where
@@ -40,6 +44,9 @@ instance HasGoogleApiKeys AppContext where
     getGoogleClientId = googleClientId
     getGoogleClientSecret = googleClientSecret
 
+instance HasHttpManager AppContext where
+    getHttpManager = httpManager
+
 class HasPort a where
     getPort :: a -> Int
 instance HasPort Int where
@@ -60,3 +67,4 @@ getContext env = do
         <*> (BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL)
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_ID")
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_SECRET")
+        <*> newManager tlsManagerSettings

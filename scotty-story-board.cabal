@@ -20,6 +20,8 @@ executable migrate
   build-depends:       base
                      , bytestring
                      , dotenv
+                     , http-client
+                     , http-conduit
                      , postgresql-simple
                      , postgresql-simple-migration
   default-language:    Haskell2010
@@ -58,6 +60,7 @@ executable web
                      , dotenv
                      , fast-logger
                      , hoauth2
+                     , http-client
                      , http-conduit
                      , http-types
                      , logging
@@ -122,6 +125,7 @@ test-suite test
                      , hoauth2
                      , hspec
                      , hspec-wai
+                     , http-client
                      , http-conduit
                      , http-types
                      , logging
