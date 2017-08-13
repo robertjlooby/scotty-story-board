@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
 
 module AuthorizationController
     ( app
@@ -14,15 +13,14 @@ import           Data.Text (Text)
 import qualified Data.Text.Encoding as E
 import           Database.PostgreSQL.Simple (Connection)
 import           GHC.Generics (Generic)
-import           Network.HTTP.Simple (getResponseBody, httpJSON, parseRequest, setRequestQueryString)
+import           Network.HTTP.Simple (getResponseBody, httpJSON, setRequestQueryString)
 import           Network.HTTP.Types (renderSimpleQuery)
-import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, fetchAccessToken, idToken, idtoken)
+import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, fetchAccessToken, idToken, idtoken, uriToRequest)
 import           Network.OAuth.OAuth2.TokenRequest (Errors)
 import           URI.ByteString (serializeURIRef')
-import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
 
-import           AppContext (AppContext, getDbConn, getGoogleClientId, getGoogleClientSecret, getGoogleRedirectUri, getHttpManager)
+import           AppContext (AppContext, HasGoogleApiKeys(..), getDbConn, getHttpManager)
 import qualified AuthViews
 import qualified OAuthLogin
 import           Session (Session(Session), deleteSession, setSession)
@@ -35,13 +33,13 @@ googleKey appContext = OAuth2
     { oauthClientId = E.decodeUtf8 $ getGoogleClientId appContext
     , oauthClientSecret = E.decodeUtf8 $ getGoogleClientSecret appContext
     , oauthCallback = Just $ getGoogleRedirectUri appContext
-    , oauthOAuthorizeEndpoint = [uri|https://accounts.google.com/o/oauth2/auth|]
-    , oauthAccessTokenEndpoint = [uri|https://www.googleapis.com/oauth2/v4/token|]
+    , oauthOAuthorizeEndpoint = getGoogleOAuthUri appContext
+    , oauthAccessTokenEndpoint = getGoogleAccessTokenUri appContext
     }
 
 getGoogleLoginUrl :: AppContext -> ByteString
 getGoogleLoginUrl appContext =
-    googleAuthBaseUrl
+    serializeURIRef' (getGoogleOAuthUri appContext)
         <> renderSimpleQuery
             True
             [ ("client_id", getGoogleClientId appContext)
@@ -49,8 +47,6 @@ getGoogleLoginUrl appContext =
             , ("redirect_uri", serializeURIRef' (getGoogleRedirectUri appContext))
             , ("scope", "email profile")
             ]
-  where
-    googleAuthBaseUrl = "https://accounts.google.com/o/oauth2/v2/auth"
 
 data GoogleInfo = GoogleInfo
     { sub :: T.Text
@@ -88,7 +84,7 @@ getGoogleInfo appContext code = do
     case oAuth2Result of
         Right token -> do
             (Just jwt) <- return . idToken $ token
-            req <- parseRequest "https://www.googleapis.com/oauth2/v3/tokeninfo"
+            req <- uriToRequest . getGoogleTokenInfoUri $ appContext
             resp <- httpJSON (setRequestQueryString [("id_token", Just (E.encodeUtf8 $ idtoken jwt))] req)
             return . Right $ getResponseBody resp
         Left errors -> return . Left $ errors

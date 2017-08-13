@@ -23,7 +23,10 @@ data AppContext = AppContext
     , dbConn :: Connection
     , googleClientId :: BS8.ByteString
     , googleClientSecret :: BS8.ByteString
+    , googleAccessTokenUri :: URI
+    , googleOAuthUri :: URI
     , googleRedirectUri :: URI
+    , googleTokenInfoUri :: URI
     , httpManager :: Manager
     }
 
@@ -42,11 +45,17 @@ instance HasEnvironment AppContext where
 class HasGoogleApiKeys a where
     getGoogleClientId :: a -> BS8.ByteString
     getGoogleClientSecret :: a -> BS8.ByteString
+    getGoogleAccessTokenUri :: a -> URI
+    getGoogleOAuthUri :: a -> URI
     getGoogleRedirectUri :: a -> URI
+    getGoogleTokenInfoUri :: a -> URI
 instance HasGoogleApiKeys AppContext where
     getGoogleClientId = googleClientId
     getGoogleClientSecret = googleClientSecret
+    getGoogleAccessTokenUri = googleAccessTokenUri
+    getGoogleOAuthUri = googleOAuthUri
     getGoogleRedirectUri = googleRedirectUri
+    getGoogleTokenInfoUri = googleTokenInfoUri
 
 instance HasHttpManager AppContext where
     getHttpManager = httpManager
@@ -71,13 +80,16 @@ getContext env = do
         <*> (BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL)
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_ID")
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_SECRET")
-        <*> fetchGoogleRedirectUri
+        <*> getUri "GOOGLE_ACCESS_TOKEN_URI"
+        <*> getUri "GOOGLE_OAUTH_URI"
+        <*> getUri "GOOGLE_REDIRECT_URI"
+        <*> getUri "GOOGLE_TOKEN_INFO_URI"
         <*> newManager tlsManagerSettings
 
-fetchGoogleRedirectUri :: IO URI
-fetchGoogleRedirectUri = do
-    eitherGoogleRedirectUri <- parseURI strictURIParserOptions <$> BS8.pack <$> getEnv "GOOGLE_REDIRECT_URI"
+getUri :: String -> IO URI
+getUri varName = do
+    eitherUri <- parseURI strictURIParserOptions <$> BS8.pack <$> getEnv varName
 
-    case eitherGoogleRedirectUri of
-      Left err -> fail $ "Failed to parse GOOGLE_REDIRECT_URI: " ++ show err
-      Right redirectUri -> return redirectUri
+    case eitherUri of
+      Left err -> fail $ "Failed to parse " ++ varName ++ ": " ++ show err
+      Right uri -> return uri
