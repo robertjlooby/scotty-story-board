@@ -18,11 +18,11 @@ import           Network.HTTP.Simple (getResponseBody, httpJSON, parseRequest, s
 import           Network.HTTP.Types (renderSimpleQuery)
 import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, fetchAccessToken, idToken, idtoken)
 import           Network.OAuth.OAuth2.TokenRequest (Errors)
-import           URI.ByteString (Absolute, URIRef, serializeURIRef')
+import           URI.ByteString (serializeURIRef')
 import           URI.ByteString.QQ (uri)
 import qualified Web.Scotty as S
 
-import           AppContext (AppContext, getDbConn, getEnvironment, getGoogleClientId, getGoogleClientSecret, getHttpManager)
+import           AppContext (AppContext, getDbConn, getGoogleClientId, getGoogleClientSecret, getGoogleRedirectUri, getHttpManager)
 import qualified AuthViews
 import qualified OAuthLogin
 import           Session (Session(Session), deleteSession, setSession)
@@ -34,7 +34,7 @@ googleKey :: AppContext -> OAuth2
 googleKey appContext = OAuth2
     { oauthClientId = E.decodeUtf8 $ getGoogleClientId appContext
     , oauthClientSecret = E.decodeUtf8 $ getGoogleClientSecret appContext
-    , oauthCallback = Just . googleCallback $ getEnvironment appContext
+    , oauthCallback = Just $ getGoogleRedirectUri appContext
     , oauthOAuthorizeEndpoint = [uri|https://accounts.google.com/o/oauth2/auth|]
     , oauthAccessTokenEndpoint = [uri|https://www.googleapis.com/oauth2/v4/token|]
     }
@@ -46,18 +46,11 @@ getGoogleLoginUrl appContext =
             True
             [ ("client_id", getGoogleClientId appContext)
             , ("response_type", "code")
-            , ("redirect_uri", googleRedirectUri (getEnvironment appContext))
+            , ("redirect_uri", serializeURIRef' (getGoogleRedirectUri appContext))
             , ("scope", "email profile")
             ]
   where
     googleAuthBaseUrl = "https://accounts.google.com/o/oauth2/v2/auth"
-
-googleCallback :: String -> URIRef Absolute
-googleCallback "production" = [uri|https://scotty-story-board.herokuapp.com/oauth/google|]
-googleCallback _            = [uri|http://localhost:3000/oauth/google|]
-
-googleRedirectUri :: String -> ByteString
-googleRedirectUri = serializeURIRef' . googleCallback
 
 data GoogleInfo = GoogleInfo
     { sub :: T.Text

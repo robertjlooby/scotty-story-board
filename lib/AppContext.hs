@@ -15,6 +15,7 @@ import           Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
 import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import           Network.HTTP.Client (HasHttpManager(..), Manager)
 import           System.Environment (getEnv)
+import           URI.ByteString (URI, parseURI, strictURIParserOptions)
 
 data AppContext = AppContext
     { environment :: String
@@ -22,6 +23,7 @@ data AppContext = AppContext
     , dbConn :: Connection
     , googleClientId :: BS8.ByteString
     , googleClientSecret :: BS8.ByteString
+    , googleRedirectUri :: URI
     , httpManager :: Manager
     }
 
@@ -40,9 +42,11 @@ instance HasEnvironment AppContext where
 class HasGoogleApiKeys a where
     getGoogleClientId :: a -> BS8.ByteString
     getGoogleClientSecret :: a -> BS8.ByteString
+    getGoogleRedirectUri :: a -> URI
 instance HasGoogleApiKeys AppContext where
     getGoogleClientId = googleClientId
     getGoogleClientSecret = googleClientSecret
+    getGoogleRedirectUri = googleRedirectUri
 
 instance HasHttpManager AppContext where
     getHttpManager = httpManager
@@ -67,4 +71,13 @@ getContext env = do
         <*> (BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL)
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_ID")
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_SECRET")
+        <*> fetchGoogleRedirectUri
         <*> newManager tlsManagerSettings
+
+fetchGoogleRedirectUri :: IO URI
+fetchGoogleRedirectUri = do
+    eitherGoogleRedirectUri <- parseURI strictURIParserOptions <$> BS8.pack <$> getEnv "GOOGLE_REDIRECT_URI"
+
+    case eitherGoogleRedirectUri of
+      Left err -> fail $ "Failed to parse GOOGLE_REDIRECT_URI: " ++ show err
+      Right redirectUri -> return redirectUri
