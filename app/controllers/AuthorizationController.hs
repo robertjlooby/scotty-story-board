@@ -7,15 +7,13 @@ module AuthorizationController
 
 import           Data.Aeson.Types (FromJSON)
 import           Data.ByteString (ByteString)
-import           Data.Monoid ((<>))
 import qualified Data.Text as T
 import           Data.Text (Text)
 import qualified Data.Text.Encoding as E
 import           Database.PostgreSQL.Simple (Connection)
 import           GHC.Generics (Generic)
-import           Network.HTTP.Simple (getResponseBody, httpJSON, setRequestQueryString)
-import           Network.HTTP.Types (renderSimpleQuery)
-import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, fetchAccessToken, idToken, idtoken, uriToRequest)
+import           Network.HTTP.Simple (getResponseBody, httpJSON)
+import           Network.OAuth.OAuth2 (ExchangeToken(..), OAuth2(..), OAuth2Error, appendQueryParams, authorizationUrl, fetchAccessToken, idToken, idtoken, uriToRequest)
 import           Network.OAuth.OAuth2.TokenRequest (Errors)
 import           URI.ByteString (serializeURIRef')
 import qualified Web.Scotty as S
@@ -38,15 +36,8 @@ googleKey appContext = OAuth2
     }
 
 getGoogleLoginUrl :: AppContext -> ByteString
-getGoogleLoginUrl appContext =
-    serializeURIRef' (getGoogleOAuthUri appContext)
-        <> renderSimpleQuery
-            True
-            [ ("client_id", getGoogleClientId appContext)
-            , ("response_type", "code")
-            , ("redirect_uri", serializeURIRef' (getGoogleRedirectUri appContext))
-            , ("scope", "email profile")
-            ]
+getGoogleLoginUrl =
+    serializeURIRef' . appendQueryParams [("scope", "email profile")] . authorizationUrl . googleKey
 
 data GoogleInfo = GoogleInfo
     { sub :: T.Text
@@ -84,8 +75,8 @@ getGoogleInfo appContext code = do
     case oAuth2Result of
         Right token -> do
             (Just jwt) <- return . idToken $ token
-            req <- uriToRequest . getGoogleTokenInfoUri $ appContext
-            resp <- httpJSON (setRequestQueryString [("id_token", Just (E.encodeUtf8 $ idtoken jwt))] req)
+            req <- uriToRequest . appendQueryParams [("id_token", E.encodeUtf8 $ idtoken jwt)] . getGoogleTokenInfoUri $ appContext
+            resp <- httpJSON req
             return . Right $ getResponseBody resp
         Left errors -> return . Left $ errors
 
