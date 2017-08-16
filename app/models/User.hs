@@ -5,7 +5,8 @@ module User
     (
     -- * Types
       User
-    , UserId(..)
+    , UserId'(..)
+    , UserId
     -- * Accessors
     , id_
     , name
@@ -26,24 +27,26 @@ import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
 import           Text.Blaze (ToValue, toValue)
 
-newtype UserId = UserId Int deriving (Eq, FromField, FromJSON, Ord, Show, ToField, ToJSON)
+newtype UserId' a = UserId a deriving (Eq, FromField, FromJSON, Ord, Show, ToField, ToJSON)
+type UserId = UserId' Int
 
-instance FromRow UserId where
+instance FromField a => FromRow (UserId' a) where
     fromRow = UserId <$> field
 
-instance ToValue UserId where
+instance ToValue a => ToValue (UserId' a) where
     toValue (UserId userId) = "/users/" <> toValue userId
 
-data User = User
-    { id_ :: UserId
-    , name :: Text
-    , email :: Text
+data User' a b c = User
+    { id_ :: a
+    , name :: b
+    , email :: c
     } deriving (Eq, Show)
+type User = User' UserId Text Text
 
-instance FromRow User where
+instance (FromField a, FromField b, FromField c) => FromRow (User' a b c) where
     fromRow = User <$> field <*> field <*> field
 
-instance ToValue User where
+instance ToValue a => ToValue (User' a b c) where
     toValue = toValue . id_
 
 create :: Connection -> Text -> Text -> IO User

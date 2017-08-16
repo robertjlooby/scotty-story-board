@@ -5,7 +5,8 @@ module Project
     (
     -- * Types
       Project
-    , ProjectId(..)
+    , ProjectId'(..)
+    , ProjectId
     -- * Accessors
     , id_
     , name
@@ -31,24 +32,26 @@ import           Text.Blaze (ToValue, toValue)
 
 import           User (UserId)
 
-newtype ProjectId = ProjectId Int deriving (Eq, FromField, Ord, Show, ToField)
+newtype ProjectId' a = ProjectId a deriving (Eq, FromField, Ord, Show, ToField)
+type ProjectId = ProjectId' Int
 
-instance FromRow ProjectId where
+instance FromField a => FromRow (ProjectId' a) where
     fromRow = ProjectId <$> field
 
-instance ToValue ProjectId where
+instance ToValue a => ToValue (ProjectId' a) where
     toValue (ProjectId projectId) = "/projects/" <> toValue projectId
 
-data Project = Project
-    { id_ :: ProjectId
-    , name :: Text
-    , description :: Text
+data Project' a b c = Project
+    { id_ :: a
+    , name :: b
+    , description :: c
     } deriving (Eq, Show)
+type Project = Project' ProjectId Text Text
 
-instance FromRow Project where
+instance (FromField a, FromField b, FromField c) => FromRow (Project' a b c) where
     fromRow = Project <$> field <*> field <*> field
 
-instance ToValue Project where
+instance ToValue a => ToValue (Project' a b c) where
     toValue = toValue . id_
 
 create :: Connection -> Text -> Text -> IO Project
