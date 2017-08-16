@@ -10,11 +10,12 @@ module AppContext
 
 import           Configuration.Dotenv (loadFile, onMissingFile)
 import qualified Data.ByteString.Char8 as BS8
+import           Data.Maybe (fromMaybe)
 import           Data.Monoid ((<>))
 import           Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
 import           Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import           Network.HTTP.Client (HasHttpManager(..), Manager)
-import           System.Environment (getEnv)
+import           System.Environment (getEnv, lookupEnv)
 import           URI.ByteString (URI, parseURI, strictURIParserOptions)
 
 data AppContext = AppContext
@@ -68,8 +69,9 @@ instance HasPort AppContext where
     getPort = port
 
 getContext :: String -> IO AppContext
-getContext env = do
-    let filename = "config/" <> env <> ".env"
+getContext defaultEnv = do
+    currentEnv <- fromMaybe defaultEnv <$> lookupEnv "APP_ENV"
+    let filename = "config/" <> currentEnv <> ".env"
     onMissingFile
         (loadFile False filename)
         (putStrLn $ "Could not find file: " <> filename)
