@@ -65,7 +65,9 @@ executable web
                      , http-conduit
                      , http-types
                      , logging
+                     , opaleye
                      , postgresql-simple
+                     , product-profunctors
                      , scotty
                      , scotty-cookie
                      , text
@@ -131,8 +133,10 @@ test-suite test
                      , http-types
                      , logging
                      , network-uri
+                     , opaleye
                      , postgresql-simple
                      , postgresql-simple-migration
+                     , product-profunctors
                      , scotty
                      , scotty-cookie
                      , text
