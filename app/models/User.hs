@@ -12,6 +12,7 @@ module User
     , UserId'(..)
     , UserId
     , UserIdColumn
+    , UserColumnRead
     , userIdColumn
     -- * Accessors
     , id_
@@ -19,6 +20,7 @@ module User
     , email
     -- * Queries
     , userQuery
+    , runUserQuery
     , create
     , find
     , findByName
