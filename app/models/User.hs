@@ -29,6 +29,7 @@ module User
 
 import           Control.Arrow (returnA)
 import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Maybe (listToMaybe)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
@@ -84,10 +85,7 @@ create conn name' email' = do
 
 find :: Connection -> UserId -> IO (Maybe User)
 find conn userId = do
-    users <- runUserQuery conn (findQuery userId)
-    case users of
-        [user] -> return $ Just user
-        _      -> return Nothing
+    listToMaybe <$> runUserQuery conn (findQuery userId)
 
 findQuery :: UserId -> Query UserColumnRead
 findQuery userId = proc () -> do
@@ -97,10 +95,7 @@ findQuery userId = proc () -> do
 
 findByName :: Connection -> Text -> IO (Maybe User)
 findByName conn userName = do
-    users <- runUserQuery conn (findByNameQuery userName)
-    case users of
-        [user] -> return $ Just user
-        _      -> return Nothing
+    listToMaybe <$> runUserQuery conn (findByNameQuery userName)
 
 findByNameQuery :: Text -> Query UserColumnRead
 findByNameQuery userName = proc () -> do
