@@ -11,11 +11,14 @@ module User
       User
     , UserId'(..)
     , UserId
+    , UserIdColumn
+    , userIdColumn
     -- * Accessors
     , id_
     , name
     , email
     -- * Queries
+    , userQuery
     , create
     , find
     , findByName
@@ -31,7 +34,7 @@ import           Database.PostgreSQL.Simple (Connection, FromRow)
 import           Database.PostgreSQL.Simple.FromField (FromField)
 import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
-import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runQuery, runUpdate)
+import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
 newtype UserId' a = UserId a deriving (Eq, FromField, FromJSON, Ord, Show, ToField, ToJSON)
@@ -39,6 +42,9 @@ type UserId = UserId' Int
 type UserIdColumn = UserId' (Column PGInt4)
 type UserIdColumnMaybe = UserId' (Maybe (Column PGInt4))
 $(makeAdaptorAndInstance "pUserId" ''UserId')
+
+userIdColumn :: TableProperties a b -> TableProperties (UserId' a) (UserId' b)
+userIdColumn tableProperties = pUserId (UserId tableProperties)
 
 instance Functor UserId' where
     fmap f (UserId a) = UserId (f a)
@@ -61,7 +67,7 @@ $(makeAdaptorAndInstance "pUser" ''User')
 
 usersTable :: Table UserColumnWrite UserColumnRead
 usersTable = Table "users"
-                  (pUser User { id_ = pUserId (UserId (optional "id"))
+                  (pUser User { id_ = userIdColumn (optional "id")
                               , name = required "name"
                               , email = required "email"
                               })
