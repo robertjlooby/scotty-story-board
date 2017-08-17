@@ -35,7 +35,7 @@ import           Database.PostgreSQL.Simple (Connection)
 import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runDelete, runInsertMany, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
-import           User (UserId, UserIdColumn, userIdColumn, userQuery)
+import           User (UserId, UserIdColumn, userIdColumn, userQuery, withUserId)
 import qualified User
 
 newtype ProjectId' a = ProjectId a deriving (Eq, Ord, Show)
@@ -124,9 +124,9 @@ findByUserIdQuery userId projectId = proc () -> do
     project <- projectQuery -< ()
     (puProjectId, puUserId) <- projectsUsersQuery -< ()
 
-    restrict -< User.id_ user .=== (pgInt4 <$> userId)
+    withUserId userId -< User.id_ user
+    withUserId userId -< puUserId
     restrict -< id_ project .=== (pgInt4 <$> projectId)
-    restrict -< puUserId .=== (pgInt4 <$> userId)
     restrict -< id_ project .=== puProjectId
 
     returnA -< project
@@ -141,8 +141,8 @@ allByUserIdQuery userId = proc () -> do
     project <- projectQuery -< ()
     (puProjectId, puUserId) <- projectsUsersQuery -< ()
 
-    restrict -< User.id_ user .=== (pgInt4 <$> userId)
-    restrict -< puUserId .=== (pgInt4 <$> userId)
+    withUserId userId -< User.id_ user
+    withUserId userId -< puUserId
     restrict -< id_ project .=== puProjectId
 
     returnA -< project
