@@ -41,7 +41,10 @@ oAuthLoginQuery = queryTable oAuthLoginsTable
 
 create :: Connection -> UserId -> Text -> Text -> IO ()
 create conn userId providerName providerUserId = do
-    _ <- runInsertMany conn oAuthLoginsTable [OAuthLogin (pgInt4 <$> userId) (pgStrictText providerName) (pgStrictText providerUserId)]
+    _ <- runInsertMany
+             conn
+             oAuthLoginsTable
+             [OAuthLogin (pgInt4 <$> userId) (pgStrictText providerName) (pgStrictText providerUserId)]
     return ()
 
 findUser :: Connection -> Text -> Text -> IO (Maybe User)

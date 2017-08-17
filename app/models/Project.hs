@@ -149,7 +149,11 @@ allByUserIdQuery userId = proc () -> do
 
 update :: Connection -> Project -> IO ()
 update conn project = do
-    _ <- runUpdate conn projectsTable (\p -> p {id_ = Just <$> id_ p, name = pgStrictText (name project), description = pgStrictText (description project)}) (\p -> id_ p .=== (pgInt4 <$> id_ project))
+    _ <- runUpdate
+             conn
+             projectsTable
+             (\p -> p {id_ = Just <$> id_ p, name = pgStrictText (name project), description = pgStrictText (description project)})
+             (\p -> id_ p .=== (pgInt4 <$> id_ project))
     return ()
 
 delete :: Connection -> ProjectId -> IO ()
