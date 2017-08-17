@@ -12,6 +12,7 @@ module OAuthLogin
     ) where
 
 import           Control.Arrow (returnA)
+import           Data.Maybe (listToMaybe)
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection)
@@ -45,10 +46,7 @@ create conn userId providerName providerUserId = do
 
 findUser :: Connection -> Text -> Text -> IO (Maybe User)
 findUser conn providerName providerUserId = do
-    users <- runUserQuery conn (findUserQuery providerName providerUserId)
-    case users of
-        [user] -> return $ Just user
-        _      -> return Nothing
+    listToMaybe <$> runUserQuery conn (findUserQuery providerName providerUserId)
 
 findUserQuery :: Text -> Text -> Query UserColumnRead
 findUserQuery providerName providerUserId = proc () -> do

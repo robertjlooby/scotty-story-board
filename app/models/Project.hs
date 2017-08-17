@@ -26,6 +26,7 @@ module Project
     ) where
 
 import           Control.Arrow (returnA)
+import           Data.Maybe (listToMaybe)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product (p2)
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
@@ -95,10 +96,7 @@ addUser conn projectId userId = do
 
 find :: Connection -> ProjectId -> IO (Maybe Project)
 find conn projectId = do
-    projects <- runProjectQuery conn (findQuery projectId)
-    case projects of
-        [project] -> return $ Just project
-        _         -> return Nothing
+    listToMaybe <$> runProjectQuery conn (findQuery projectId)
 
 findQuery :: ProjectId -> Query ProjectColumnRead
 findQuery projectId = proc () -> do
@@ -108,10 +106,7 @@ findQuery projectId = proc () -> do
 
 findByName :: Connection -> Text -> IO (Maybe Project)
 findByName conn projectName = do
-    projects <- runProjectQuery conn (findByNameQuery projectName)
-    case projects of
-        [project] -> return $ Just project
-        _         -> return Nothing
+    listToMaybe <$> runProjectQuery conn (findByNameQuery projectName)
 
 findByNameQuery :: Text -> Query ProjectColumnRead
 findByNameQuery projectName = proc () -> do
@@ -121,10 +116,7 @@ findByNameQuery projectName = proc () -> do
 
 findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
 findByUserId conn userId projectId = do
-    projects <- runProjectQuery conn (findByUserIdQuery userId projectId)
-    case projects of
-        [project] -> return $ Just project
-        _         -> return Nothing
+    listToMaybe <$> runProjectQuery conn (findByUserIdQuery userId projectId)
 
 findByUserIdQuery :: UserId -> ProjectId -> Query ProjectColumnRead
 findByUserIdQuery userId projectId = proc () -> do
