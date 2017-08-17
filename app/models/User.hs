@@ -105,5 +105,9 @@ findByNameQuery userName = proc () -> do
 
 update :: Connection -> User -> IO ()
 update conn user = do
-    _ <- runUpdate conn usersTable (\u -> u {id_ = Just <$> id_ u, name = pgStrictText (name user), email = pgStrictText (email user)}) (\u -> id_ u .=== (pgInt4 <$> id_ user))
+    _ <- runUpdate
+             conn
+             usersTable
+             (\u -> u {id_ = Just <$> id_ u, name = pgStrictText (name user), email = pgStrictText (email user)})
+             (\u -> id_ u .=== (pgInt4 <$> id_ user))
     return ()
