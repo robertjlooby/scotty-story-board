@@ -1,9 +1,8 @@
-{-# LANGUAGE Arrows                     #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE Arrows                #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Project
     (
@@ -31,17 +30,14 @@ import           Data.Monoid ((<>))
 import           Data.Profunctor.Product (p2)
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
-import           Database.PostgreSQL.Simple (Connection, FromRow)
-import           Database.PostgreSQL.Simple.FromField (FromField)
-import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
-import           Database.PostgreSQL.Simple.ToField (ToField)
+import           Database.PostgreSQL.Simple (Connection)
 import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runDelete, runInsertMany, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
 import           User (UserId, UserIdColumn, userIdColumn, userQuery)
 import qualified User
 
-newtype ProjectId' a = ProjectId a deriving (Eq, FromField, Ord, Show, ToField)
+newtype ProjectId' a = ProjectId a deriving (Eq, Ord, Show)
 type ProjectId = ProjectId' Int
 type ProjectIdColumn = ProjectId' (Column PGInt4)
 type ProjectIdColumnMaybe = ProjectId' (Maybe (Column PGInt4))
@@ -49,9 +45,6 @@ $(makeAdaptorAndInstance "pProjectId" ''ProjectId')
 
 instance Functor ProjectId' where
     fmap f (ProjectId a) = ProjectId (f a)
-
-instance FromField a => FromRow (ProjectId' a) where
-    fromRow = ProjectId <$> field
 
 instance ToValue a => ToValue (ProjectId' a) where
     toValue (ProjectId projectId) = "/projects/" <> toValue projectId
@@ -65,9 +58,6 @@ type Project = Project' ProjectId Text Text
 type ProjectColumnWrite = Project' ProjectIdColumnMaybe (Column PGText) (Column PGText)
 type ProjectColumnRead = Project' ProjectIdColumn (Column PGText) (Column PGText)
 $(makeAdaptorAndInstance "pProject" ''Project')
-
-instance (FromField a, FromField b, FromField c) => FromRow (Project' a b c) where
-    fromRow = Project <$> field <*> field <*> field
 
 instance ToValue a => ToValue (Project' a b c) where
     toValue = toValue . id_

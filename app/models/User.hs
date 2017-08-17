@@ -32,14 +32,11 @@ import           Data.Aeson (FromJSON, ToJSON)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
-import           Database.PostgreSQL.Simple (Connection, FromRow)
-import           Database.PostgreSQL.Simple.FromField (FromField)
-import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
-import           Database.PostgreSQL.Simple.ToField (ToField)
+import           Database.PostgreSQL.Simple (Connection)
 import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
-newtype UserId' a = UserId a deriving (Eq, FromField, FromJSON, Ord, Show, ToField, ToJSON)
+newtype UserId' a = UserId a deriving (Eq, FromJSON, Ord, Show, ToJSON)
 type UserId = UserId' Int
 type UserIdColumn = UserId' (Column PGInt4)
 type UserIdColumnMaybe = UserId' (Maybe (Column PGInt4))
@@ -50,9 +47,6 @@ userIdColumn tableProperties = pUserId (UserId tableProperties)
 
 instance Functor UserId' where
     fmap f (UserId a) = UserId (f a)
-
-instance FromField a => FromRow (UserId' a) where
-    fromRow = UserId <$> field
 
 instance ToValue a => ToValue (UserId' a) where
     toValue (UserId userId) = "/users/" <> toValue userId
@@ -79,9 +73,6 @@ userQuery = queryTable usersTable
 
 runUserQuery :: Connection -> Query UserColumnRead -> IO [User]
 runUserQuery = runQuery
-
-instance (FromField a, FromField b, FromField c) => FromRow (User' a b c) where
-    fromRow = User <$> field <*> field <*> field
 
 instance ToValue a => ToValue (User' a b c) where
     toValue = toValue . id_
