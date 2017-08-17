@@ -25,7 +25,6 @@ module User
     , find
     , findByName
     , update
-    , withUserId
     ) where
 
 import           Control.Arrow (returnA)
@@ -35,8 +34,10 @@ import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection)
-import           Opaleye (Column, PGInt4, PGText, Query, QueryArr, Table(Table), TableProperties, (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runQuery, runUpdate)
+import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
+
+import           OpaleyeUtils (withId)
 
 newtype UserId' a = UserId a deriving (Eq, FromJSON, Ord, Show, ToJSON)
 type UserId = UserId' Int
@@ -84,10 +85,6 @@ create conn name' email' = do
     [user] <- runInsertManyReturning conn usersTable [User (UserId Nothing) (pgStrictText name') (pgStrictText email')] id
     return user
 
-withUserId :: UserId -> QueryArr (UserIdColumn) ()
-withUserId userId = proc userId' -> do
-    restrict -< (pgInt4 <$> userId) .=== userId'
-
 find :: Connection -> UserId -> IO (Maybe User)
 find conn userId = do
     listToMaybe <$> runUserQuery conn (findQuery userId)
@@ -95,7 +92,7 @@ find conn userId = do
 findQuery :: UserId -> Query UserColumnRead
 findQuery userId = proc () -> do
     row <- userQuery -< ()
-    withUserId userId -< id_ row
+    withId userId -< id_ row
     returnA -< row
 
 findByName :: Connection -> Text -> IO (Maybe User)
