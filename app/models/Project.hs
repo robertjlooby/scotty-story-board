@@ -1,5 +1,9 @@
+{-# LANGUAGE Arrows                     #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Project
     (
@@ -22,18 +26,27 @@ module Project
     , delete
     ) where
 
+import           Control.Arrow (returnA)
 import           Data.Monoid ((<>))
+import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query)
 import           Database.PostgreSQL.Simple.FromField (FromField)
 import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
+import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runDelete, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
 import           User (UserId)
 
 newtype ProjectId' a = ProjectId a deriving (Eq, FromField, Ord, Show, ToField)
 type ProjectId = ProjectId' Int
+type ProjectIdColumn = ProjectId' (Column PGInt4)
+type ProjectIdColumnMaybe = ProjectId' (Maybe (Column PGInt4))
+$(makeAdaptorAndInstance "pProjectId" ''ProjectId')
+
+instance Functor ProjectId' where
+    fmap f (ProjectId a) = ProjectId (f a)
 
 instance FromField a => FromRow (ProjectId' a) where
     fromRow = ProjectId <$> field
@@ -47,6 +60,22 @@ data Project' a b c = Project
     , description :: c
     } deriving (Eq, Show)
 type Project = Project' ProjectId Text Text
+type ProjectColumnWrite = Project' ProjectIdColumnMaybe (Column PGText) (Column PGText)
+type ProjectColumnRead = Project' ProjectIdColumn (Column PGText) (Column PGText)
+$(makeAdaptorAndInstance "pProject" ''Project')
+
+projectsTable :: Table ProjectColumnWrite ProjectColumnRead
+projectsTable = Table "projects"
+                      (pProject Project { id_ = pProjectId (ProjectId (optional "id"))
+                                        , name = required "name"
+                                        , description = required "description"
+                                        })
+
+projectQuery :: Query ProjectColumnRead
+projectQuery = queryTable projectsTable
+
+runProjectQuery :: Connection -> Query ProjectColumnRead -> IO [Project]
+runProjectQuery = runQuery
 
 instance (FromField a, FromField b, FromField c) => FromRow (Project' a b c) where
     fromRow = Project <$> field <*> field <*> field
@@ -56,7 +85,7 @@ instance ToValue a => ToValue (Project' a b c) where
 
 create :: Connection -> Text -> Text -> IO Project
 create conn name' description' = do
-    [project] <- query conn "INSERT INTO projects (name, description) VALUES (?, ?) RETURNING *" (name', description')
+    [project] <- runInsertManyReturning conn projectsTable [Project (ProjectId Nothing) (pgStrictText name') (pgStrictText description')] id
     return project
 
 addUser :: Connection -> ProjectId -> UserId -> IO ()
@@ -65,18 +94,30 @@ addUser conn projectId userId = do
     return ()
 
 find :: Connection -> ProjectId -> IO (Maybe Project)
-find conn (ProjectId projectId) = do
-    project <- query conn "SELECT id, name, description FROM projects WHERE id = ?" $ Only projectId
-    case project of
-        [proj] -> return $ Just proj
-        _      -> return Nothing
+find conn projectId = do
+    projects <- runProjectQuery conn (findQuery projectId)
+    case projects of
+        [project] -> return $ Just project
+        _         -> return Nothing
+
+findQuery :: ProjectId -> Query ProjectColumnRead
+findQuery projectId = proc () -> do
+    row <- projectQuery -< ()
+    restrict -< id_ row .=== (pgInt4 <$> projectId)
+    returnA -< row
 
 findByName :: Connection -> Text -> IO (Maybe Project)
 findByName conn projectName = do
-    project <- query conn "SELECT id, name, description FROM projects WHERE name = ?" $ Only projectName
-    case project of
-        [proj] -> return $ Just proj
-        _      -> return Nothing
+    projects <- runProjectQuery conn (findByNameQuery projectName)
+    case projects of
+        [project] -> return $ Just project
+        _         -> return Nothing
+
+findByNameQuery :: Text -> Query ProjectColumnRead
+findByNameQuery projectName = proc () -> do
+    row <- projectQuery -< ()
+    restrict -< name row .== pgStrictText projectName
+    returnA -< row
 
 findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
 findByUserId conn userId projectId = do
@@ -91,10 +132,10 @@ allByUserId conn userId =
 
 update :: Connection -> Project -> IO ()
 update conn project = do
-    _ <- execute conn "UPDATE projects SET name = ?, description = ? WHERE id = ?" (name project, description project, id_ project)
+    _ <- runUpdate conn projectsTable (\p -> p {id_ = Just <$> id_ p, name = pgStrictText (name project), description = pgStrictText (description project)}) (\p -> id_ p .=== (pgInt4 <$> id_ project))
     return ()
 
 delete :: Connection -> ProjectId -> IO ()
 delete conn projectId = do
-    _ <- execute conn "DELETE FROM projects WHERE id = ?" (Only projectId)
+    _ <- runDelete conn projectsTable (\p -> id_ p .=== (pgInt4 <$> projectId))
     return ()
