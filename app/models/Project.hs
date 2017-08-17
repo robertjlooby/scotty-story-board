@@ -28,16 +28,18 @@ module Project
 
 import           Control.Arrow (returnA)
 import           Data.Monoid ((<>))
+import           Data.Profunctor.Product (p2)
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
-import           Database.PostgreSQL.Simple (Connection, FromRow, Only(..), execute, query)
+import           Database.PostgreSQL.Simple (Connection, FromRow)
 import           Database.PostgreSQL.Simple.FromField (FromField)
 import           Database.PostgreSQL.Simple.FromRow (field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (ToField)
-import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runDelete, runInsertManyReturning, runQuery, runUpdate)
+import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runDelete, runInsertMany, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
-import           User (UserId)
+import           User (UserId, UserIdColumn, userIdColumn, userQuery)
+import qualified User
 
 newtype ProjectId' a = ProjectId a deriving (Eq, FromField, Ord, Show, ToField)
 type ProjectId = ProjectId' Int
@@ -64,6 +66,12 @@ type ProjectColumnWrite = Project' ProjectIdColumnMaybe (Column PGText) (Column 
 type ProjectColumnRead = Project' ProjectIdColumn (Column PGText) (Column PGText)
 $(makeAdaptorAndInstance "pProject" ''Project')
 
+instance (FromField a, FromField b, FromField c) => FromRow (Project' a b c) where
+    fromRow = Project <$> field <*> field <*> field
+
+instance ToValue a => ToValue (Project' a b c) where
+    toValue = toValue . id_
+
 projectsTable :: Table ProjectColumnWrite ProjectColumnRead
 projectsTable = Table "projects"
                       (pProject Project { id_ = pProjectId (ProjectId (optional "id"))
@@ -77,11 +85,13 @@ projectQuery = queryTable projectsTable
 runProjectQuery :: Connection -> Query ProjectColumnRead -> IO [Project]
 runProjectQuery = runQuery
 
-instance (FromField a, FromField b, FromField c) => FromRow (Project' a b c) where
-    fromRow = Project <$> field <*> field <*> field
+projectsUsersTable :: Table (ProjectIdColumn, UserIdColumn) (ProjectIdColumn, UserIdColumn)
+projectsUsersTable = Table "projects_users"
+                           (p2 ( pProjectId (ProjectId (required "project_id"))
+                               , userIdColumn (required "user_id")))
 
-instance ToValue a => ToValue (Project' a b c) where
-    toValue = toValue . id_
+projectsUsersQuery :: Query (ProjectIdColumn, UserIdColumn)
+projectsUsersQuery = queryTable projectsUsersTable
 
 create :: Connection -> Text -> Text -> IO Project
 create conn name' description' = do
@@ -90,7 +100,7 @@ create conn name' description' = do
 
 addUser :: Connection -> ProjectId -> UserId -> IO ()
 addUser conn projectId userId = do
-    _ <- execute conn "INSERT INTO projects_users (project_id, user_id) VALUES (?, ?)" (projectId, userId)
+    _ <- runInsertMany conn projectsUsersTable [(pgInt4 <$> projectId, pgInt4 <$> userId)]
     return ()
 
 find :: Connection -> ProjectId -> IO (Maybe Project)
@@ -121,14 +131,39 @@ findByNameQuery projectName = proc () -> do
 
 findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
 findByUserId conn userId projectId = do
-    project <- query conn "SELECT id, name, description FROM projects INNER JOIN projects_users ON projects_users.project_id = projects.id WHERE projects_users.user_id = ? AND projects.id = ?" (userId, projectId)
-    case project of
-        [proj] -> return $ Just proj
-        _      -> return Nothing
+    projects <- runProjectQuery conn (findByUserIdQuery userId projectId)
+    case projects of
+        [project] -> return $ Just project
+        _         -> return Nothing
+
+findByUserIdQuery :: UserId -> ProjectId -> Query ProjectColumnRead
+findByUserIdQuery userId projectId = proc () -> do
+    user <- userQuery -< ()
+    project <- projectQuery -< ()
+    (puProjectId, puUserId) <- projectsUsersQuery -< ()
+
+    restrict -< User.id_ user .=== (pgInt4 <$> userId)
+    restrict -< id_ project .=== (pgInt4 <$> projectId)
+    restrict -< puUserId .=== (pgInt4 <$> userId)
+    restrict -< id_ project .=== puProjectId
+
+    returnA -< project
 
 allByUserId :: Connection -> UserId -> IO [Project]
 allByUserId conn userId =
-    query conn "SELECT id, name, description FROM projects INNER JOIN projects_users ON projects_users.project_id = projects.id WHERE projects_users.user_id = ?" (Only userId)
+    runProjectQuery conn (allByUserIdQuery userId)
+
+allByUserIdQuery :: UserId -> Query ProjectColumnRead
+allByUserIdQuery userId = proc () -> do
+    user <- userQuery -< ()
+    project <- projectQuery -< ()
+    (puProjectId, puUserId) <- projectsUsersQuery -< ()
+
+    restrict -< User.id_ user .=== (pgInt4 <$> userId)
+    restrict -< puUserId .=== (pgInt4 <$> userId)
+    restrict -< id_ project .=== puProjectId
+
+    returnA -< project
 
 update :: Connection -> Project -> IO ()
 update conn project = do
