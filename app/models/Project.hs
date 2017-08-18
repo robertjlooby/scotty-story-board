@@ -74,9 +74,6 @@ projectsTable = Table "projects"
 projectQuery :: Query ProjectColumnRead
 projectQuery = queryTable projectsTable
 
-runProjectQuery :: Connection -> Query ProjectColumnRead -> IO [Project]
-runProjectQuery = runQuery
-
 projectsUsersTable :: Table (ProjectIdColumn, UserIdColumn) (ProjectIdColumn, UserIdColumn)
 projectsUsersTable = Table "projects_users"
                            (p2 ( pProjectId (ProjectId (required "project_id"))
@@ -97,7 +94,7 @@ addUser conn projectId userId = do
 
 find :: Connection -> ProjectId -> IO (Maybe Project)
 find conn projectId = do
-    listToMaybe <$> runProjectQuery conn (findQuery projectId)
+    listToMaybe <$> runQuery conn (findQuery projectId)
 
 findQuery :: ProjectId -> Query ProjectColumnRead
 findQuery projectId = proc () -> do
@@ -107,7 +104,7 @@ findQuery projectId = proc () -> do
 
 findByName :: Connection -> Text -> IO (Maybe Project)
 findByName conn projectName = do
-    listToMaybe <$> runProjectQuery conn (findByNameQuery projectName)
+    listToMaybe <$> runQuery conn (findByNameQuery projectName)
 
 findByNameQuery :: Text -> Query ProjectColumnRead
 findByNameQuery projectName = proc () -> do
@@ -117,7 +114,7 @@ findByNameQuery projectName = proc () -> do
 
 findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
 findByUserId conn userId projectId = do
-    listToMaybe <$> runProjectQuery conn (findByUserIdQuery userId projectId)
+    listToMaybe <$> runQuery conn (findByUserIdQuery userId projectId)
 
 findByUserIdQuery :: UserId -> ProjectId -> Query ProjectColumnRead
 findByUserIdQuery userId projectId = proc () -> do
@@ -134,7 +131,7 @@ findByUserIdQuery userId projectId = proc () -> do
 
 allByUserId :: Connection -> UserId -> IO [Project]
 allByUserId conn userId =
-    runProjectQuery conn (allByUserIdQuery userId)
+    runQuery conn (allByUserIdQuery userId)
 
 allByUserIdQuery :: UserId -> Query ProjectColumnRead
 allByUserIdQuery userId = proc () -> do
