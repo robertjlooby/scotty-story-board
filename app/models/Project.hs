@@ -26,7 +26,6 @@ module Project
     ) where
 
 import           Control.Arrow (returnA)
-import           Data.Maybe (listToMaybe)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product (p2)
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
@@ -35,7 +34,7 @@ import           Database.PostgreSQL.Simple (Connection)
 import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runDelete, runInsertMany, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
-import           OpaleyeUtils (withId)
+import           OpaleyeUtils (runFindQuery, withId)
 import           User (UserId, UserIdColumn, userIdColumn, userQuery)
 import qualified User
 
@@ -94,7 +93,7 @@ addUser conn projectId userId = do
 
 find :: Connection -> ProjectId -> IO (Maybe Project)
 find conn projectId = do
-    listToMaybe <$> runQuery conn (findQuery projectId)
+    runFindQuery conn (findQuery projectId)
 
 findQuery :: ProjectId -> Query ProjectColumnRead
 findQuery projectId = proc () -> do
@@ -104,7 +103,7 @@ findQuery projectId = proc () -> do
 
 findByName :: Connection -> Text -> IO (Maybe Project)
 findByName conn projectName = do
-    listToMaybe <$> runQuery conn (findByNameQuery projectName)
+    runFindQuery conn (findByNameQuery projectName)
 
 findByNameQuery :: Text -> Query ProjectColumnRead
 findByNameQuery projectName = proc () -> do
@@ -114,7 +113,7 @@ findByNameQuery projectName = proc () -> do
 
 findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
 findByUserId conn userId projectId = do
-    listToMaybe <$> runQuery conn (findByUserIdQuery userId projectId)
+    runFindQuery conn (findByUserIdQuery userId projectId)
 
 findByUserIdQuery :: UserId -> ProjectId -> Query ProjectColumnRead
 findByUserIdQuery userId projectId = proc () -> do
