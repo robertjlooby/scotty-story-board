@@ -28,7 +28,6 @@ module User
 
 import           Control.Arrow (returnA)
 import           Data.Aeson (FromJSON, ToJSON)
-import           Data.Maybe (listToMaybe)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
@@ -36,7 +35,7 @@ import           Database.PostgreSQL.Simple (Connection)
 import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runQuery, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
-import           OpaleyeUtils (withId)
+import           OpaleyeUtils (runFindQuery, withId)
 
 newtype UserId' a = UserId a deriving (Eq, FromJSON, Ord, Show, ToJSON)
 type UserId = UserId' Int
@@ -83,7 +82,7 @@ create conn name' email' = do
 
 find :: Connection -> UserId -> IO (Maybe User)
 find conn userId = do
-    listToMaybe <$> runQuery conn (findQuery userId)
+    runFindQuery conn (findQuery userId)
 
 findQuery :: UserId -> Query UserColumnRead
 findQuery userId = proc () -> do
@@ -93,7 +92,7 @@ findQuery userId = proc () -> do
 
 findByName :: Connection -> Text -> IO (Maybe User)
 findByName conn userName = do
-    listToMaybe <$> runQuery conn (findByNameQuery userName)
+    runFindQuery conn (findByNameQuery userName)
 
 findByNameQuery :: Text -> Query UserColumnRead
 findByNameQuery userName = proc () -> do
