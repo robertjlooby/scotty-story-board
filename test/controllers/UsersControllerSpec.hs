@@ -44,7 +44,7 @@ spec context = with (S.scottyApp $ app context) $ do
             run (withSession session request) `shouldRespondWith` 302
 
             liftIO $ do
-                found <- U.find conn (U.id_ user)
+                found <- U.runUserFindQuery conn $ U.findQuery (U.id_ user)
                 found `shouldBe` (Just $ user {U.name = "new name", U.email = "new email"})
 
         it "responds with a 404 any other user" $ do
@@ -55,9 +55,9 @@ spec context = with (S.scottyApp $ app context) $ do
             run (withSession session request) `shouldRespondWith` 404
 
             liftIO $ do
-                found <- U.find conn (U.id_ user)
+                found <- U.runUserFindQuery conn $ U.findQuery (U.id_ user)
                 found `shouldBe` Just user
-                other <- U.find conn (U.id_ otherUser)
+                other <- U.runUserFindQuery conn $ U.findQuery (U.id_ otherUser)
                 other `shouldBe` Just otherUser
 
 createUser :: Connection -> WaiSession (U.User, Session)

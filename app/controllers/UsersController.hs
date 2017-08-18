@@ -19,7 +19,7 @@ app context = do
         id_ <- S.param "id"
         if userId session == (U.UserId id_)
            then do
-               (Just user) <- S.liftAndCatchIO $ U.find conn (userId session)
+               (Just user) <- S.liftAndCatchIO $ U.runUserFindQuery conn (U.findQuery (userId session))
                UserViews.edit user
            else do
                S.status notFound404
@@ -31,7 +31,7 @@ app context = do
         email <- S.param "email"
         if userId session == (U.UserId id_)
            then do
-               (Just user) <- S.liftAndCatchIO $ U.find conn (userId session)
+               (Just user) <- S.liftAndCatchIO $ U.runUserFindQuery conn (U.findQuery (userId session))
                _ <- S.liftAndCatchIO $ U.update conn $ user {U.name = name, U.email = email}
                S.redirect $ T.pack ("/users/" ++ show id_ ++ "/edit")
            else do

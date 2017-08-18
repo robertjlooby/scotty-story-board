@@ -19,9 +19,10 @@ module User
     , name
     , email
     -- * Queries
+    , runUserFindQuery
     , userQuery
     , create
-    , find
+    , findQuery
     , findByName
     , update
     ) where
@@ -72,6 +73,9 @@ usersTable = Table "users"
 userQuery :: Query UserColumnRead
 userQuery = queryTable usersTable
 
+runUserFindQuery :: Connection -> Query UserColumnRead -> IO (Maybe User)
+runUserFindQuery = runFindQuery
+
 instance ToValue a => ToValue (User' a b c) where
     toValue = toValue . id_
 
@@ -79,10 +83,6 @@ create :: Connection -> Text -> Text -> IO User
 create conn name' email' = do
     [user] <- runInsertManyReturning conn usersTable [User (UserId Nothing) (pgStrictText name') (pgStrictText email')] id
     return user
-
-find :: Connection -> UserId -> IO (Maybe User)
-find conn userId = do
-    runFindQuery conn (findQuery userId)
 
 findQuery :: UserId -> Query UserColumnRead
 findQuery userId = proc () -> do
