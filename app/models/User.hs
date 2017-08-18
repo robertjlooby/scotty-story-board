@@ -20,7 +20,6 @@ module User
     , email
     -- * Queries
     , userQuery
-    , runUserQuery
     , create
     , find
     , findByName
@@ -74,9 +73,6 @@ usersTable = Table "users"
 userQuery :: Query UserColumnRead
 userQuery = queryTable usersTable
 
-runUserQuery :: Connection -> Query UserColumnRead -> IO [User]
-runUserQuery = runQuery
-
 instance ToValue a => ToValue (User' a b c) where
     toValue = toValue . id_
 
@@ -87,7 +83,7 @@ create conn name' email' = do
 
 find :: Connection -> UserId -> IO (Maybe User)
 find conn userId = do
-    listToMaybe <$> runUserQuery conn (findQuery userId)
+    listToMaybe <$> runQuery conn (findQuery userId)
 
 findQuery :: UserId -> Query UserColumnRead
 findQuery userId = proc () -> do
@@ -97,7 +93,7 @@ findQuery userId = proc () -> do
 
 findByName :: Connection -> Text -> IO (Maybe User)
 findByName conn userName = do
-    listToMaybe <$> runUserQuery conn (findByNameQuery userName)
+    listToMaybe <$> runQuery conn (findByNameQuery userName)
 
 findByNameQuery :: Text -> Query UserColumnRead
 findByNameQuery userName = proc () -> do

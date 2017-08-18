@@ -16,9 +16,9 @@ import           Data.Maybe (listToMaybe)
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection)
-import           Opaleye (Column, PGText, Query, Table(Table), (.===), (.==), pgInt4, pgStrictText, queryTable, required, restrict, runInsertMany)
+import           Opaleye (Column, PGText, Query, Table(Table), (.===), (.==), pgInt4, pgStrictText, queryTable, required, restrict, runInsertMany, runQuery)
 
-import           User (User, UserColumnRead, UserId, UserIdColumn, runUserQuery, userIdColumn, userQuery)
+import           User (User, UserColumnRead, UserId, UserIdColumn, userIdColumn, userQuery)
 import qualified User
 
 data OAuthLogin' a b c = OAuthLogin
@@ -49,7 +49,7 @@ create conn userId providerName providerUserId = do
 
 findUser :: Connection -> Text -> Text -> IO (Maybe User)
 findUser conn providerName providerUserId = do
-    listToMaybe <$> runUserQuery conn (findUserQuery providerName providerUserId)
+    listToMaybe <$> runQuery conn (findUserQuery providerName providerUserId)
 
 findUserQuery :: Text -> Text -> Query UserColumnRead
 findUserQuery providerName providerUserId = proc () -> do
