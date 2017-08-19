@@ -56,7 +56,7 @@ findUserQuery providerName providerUserId = proc () -> do
     user <- userQuery -< ()
     oAuthLogin <- oAuthLoginQuery -< ()
 
-    restrict -< oalUserId oAuthLogin .=== User.id_ user
+    restrict -< oalUserId oAuthLogin .=== User._userId user
     restrict -< oalProviderName oAuthLogin .== pgStrictText providerName
     restrict -< oalProviderUserId oAuthLogin .== pgStrictText providerUserId
 

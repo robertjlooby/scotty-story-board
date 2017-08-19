@@ -9,7 +9,7 @@ import           Text.Blaze.Html5.Attributes
 import qualified Web.Scotty as S
 
 import qualified Layouts
-import           Session (Session, userId)
+import           Session (Session, _sessionUserId)
 
 index :: Maybe Session -> S.ActionM ()
 index session = Layouts.app $ do
@@ -23,4 +23,4 @@ index session = Layouts.app $ do
     links (Just session') = do
         p . (a ! href "/logout") $ "Logout"
         p . (a ! href "/projects") $ "All Projects"
-        p . (a ! href ((toValue (userId session')) <> "/edit")) $ "Edit user"
+        p . (a ! href ((toValue (_sessionUserId session')) <> "/edit")) $ "Edit user"

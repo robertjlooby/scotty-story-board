@@ -13,7 +13,7 @@ spec context = describe "OAuthLogin" $ do
     let conn = getDbConn context
     it "can find user by id and provider" $ do
         user <- U.create conn "user" "email"
-        _ <- O.create conn (U.id_ user) "google" "12345"
+        _ <- O.create conn (U._userId user) "google" "12345"
         found <- O.findUser conn "google" "12345"
         found `shouldBe` Just user
 

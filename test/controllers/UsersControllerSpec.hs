@@ -44,8 +44,8 @@ spec context = with (S.scottyApp $ app context) $ do
             run (withSession session request) `shouldRespondWith` 302
 
             liftIO $ do
-                found <- U.runUserFindQuery conn $ U.findQuery (U.id_ user)
-                found `shouldBe` (Just $ user {U.name = "new name", U.email = "new email"})
+                found <- U.runUserFindQuery conn $ U.findQuery (U._userId user)
+                found `shouldBe` (Just $ user {U._userName = "new name", U._userEmail = "new email"})
 
         it "responds with a 404 any other user" $ do
             (user, session) <- createUser conn
@@ -55,18 +55,18 @@ spec context = with (S.scottyApp $ app context) $ do
             run (withSession session request) `shouldRespondWith` 404
 
             liftIO $ do
-                found <- U.runUserFindQuery conn $ U.findQuery (U.id_ user)
+                found <- U.runUserFindQuery conn $ U.findQuery (U._userId user)
                 found `shouldBe` Just user
-                other <- U.runUserFindQuery conn $ U.findQuery (U.id_ otherUser)
+                other <- U.runUserFindQuery conn $ U.findQuery (U._userId otherUser)
                 other `shouldBe` Just otherUser
 
 createUser :: Connection -> WaiSession (U.User, Session)
 createUser conn = do
     user <- liftIO $ U.create conn "user" "email"
-    return (user, Session (U.id_ user))
+    return (user, Session (U._userId user))
 
 urlFor :: U.User -> ByteString
 urlFor user =
-    let (U.UserId userId') = U.id_ user
+    let (U.UserId userId') = U._userId user
     in
         BS.pack $ "/users/" <> show userId'

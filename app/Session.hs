@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Session
     ( Session(..)
@@ -7,11 +8,13 @@ module Session
     , getSession
     , deleteSession
     , sessionMiddleware
+    , sessionUserId
     , setSession
     , vaultKey
     , with404
     ) where
 
+import           Control.Lens (makeLenses)
 import           Data.Aeson (FromJSON, ToJSON, encode, decodeStrict, defaultOptions, genericToEncoding, toEncoding)
 import qualified Data.ByteString.Lazy as BSL
 import           Data.String (IsString)
@@ -31,8 +34,9 @@ import qualified ErrorViews
 import           User (UserId)
 
 data Session = Session
-    { userId :: UserId
+    { _sessionUserId :: UserId
     } deriving (Eq, Generic, Show)
+makeLenses ''Session
 
 instance ToJSON Session where
     toEncoding = genericToEncoding defaultOptions

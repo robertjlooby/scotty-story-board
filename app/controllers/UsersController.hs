@@ -3,6 +3,7 @@
 module UsersController where
 
 import           Control.Arrow ((>>>))
+import           Control.Lens ((^.), (<&>))
 import qualified Data.Text.Lazy as T
 import           Network.HTTP.Types.Status (notFound404)
 import           Opaleye ((.===), keepWhen, pgInt4)
@@ -10,20 +11,21 @@ import qualified Web.Scotty as S
 
 import           AppContext (HasDbConn(..))
 import qualified ErrorViews
+import           User (userId)
 import qualified User as U
 import qualified UserViews
-import           Session (authorized, userId)
+import           Session (authorized, _sessionUserId, sessionUserId)
 
 app :: HasDbConn a => a -> S.ScottyM ()
 app context = do
     let conn = getDbConn context
     S.get "/users/:id/edit" $ authorized $ \session -> do
         id_ <- S.param "id"
-        if userId session == (U.UserId id_)
+        if _sessionUserId session == U.UserId id_
            then do
                Just user <- S.liftAndCatchIO
                                 $ U.runUserFindQuery conn
-                                $ U.userQuery >>> keepWhen (\user -> (pgInt4 <$> (userId session)) .=== U.id_ user)
+                                $ U.userQuery >>> keepWhen (\user -> (session^.sessionUserId <&> pgInt4) .=== user^.userId)
                UserViews.edit user
            else do
                S.status notFound404
@@ -33,10 +35,10 @@ app context = do
         id_ <- S.param "id"
         name <- S.param "name"
         email <- S.param "email"
-        if userId session == (U.UserId id_)
+        if _sessionUserId session == U.UserId id_
            then do
-               (Just user) <- S.liftAndCatchIO $ U.runUserFindQuery conn (U.findQuery (userId session))
-               _ <- S.liftAndCatchIO $ U.update conn $ user {U.name = name, U.email = email}
+               Just user <- S.liftAndCatchIO $ U.runUserFindQuery conn (U.findQuery $ session^.sessionUserId)
+               _ <- S.liftAndCatchIO $ U.update conn $ user {U._userName = name, U._userEmail = email}
                S.redirect $ T.pack ("/users/" ++ show id_ ++ "/edit")
            else do
                S.status notFound404
