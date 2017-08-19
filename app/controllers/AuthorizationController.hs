@@ -66,7 +66,7 @@ app appContext = do
         case googleInfoResult of
             Right googleInfo -> do
                 user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
-                _ <- setSession . Session $ User.id_ user
+                _ <- setSession . Session $ User._userId user
                 S.redirect "/"
             Left errors -> do
                 logError $ show errors
@@ -98,5 +98,5 @@ getOrCreateUser conn googleInfo = do
 createUser :: Connection -> GoogleInfo -> IO User
 createUser conn googleInfo = do
     user <- User.create conn (name googleInfo) $ email googleInfo
-    _ <- OAuthLogin.create conn (User.id_ user) "google" $ sub googleInfo
+    _ <- OAuthLogin.create conn (User._userId user) "google" $ sub googleInfo
     return user

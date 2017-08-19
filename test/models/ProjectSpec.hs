@@ -13,7 +13,7 @@ spec context = describe "Project" $ do
     let conn = getDbConn context
     it "can find by id" $ do
         project <- P.create conn "project" "description"
-        found <- P.find conn (P.id_ project)
+        found <- P.find conn (P._projectId project)
         found `shouldBe` Just project
 
     it "returns nothing if id not found" $ do
@@ -32,16 +32,16 @@ spec context = describe "Project" $ do
     it "can find by user id" $ do
         user <- U.create conn "user" "email"
         project <- P.create conn "project1" "description"
-        _ <- P.addUser conn (P.id_ project) (U.id_ user)
+        _ <- P.addUser conn (P._projectId project) (U._userId user)
 
         otherUser <- U.create conn "user2" "email2"
         otherProject <- P.create conn "project2" "description"
 
-        found <- P.findByUserId conn (U.id_ user) (P.id_ project)
+        found <- P.findByUserId conn (U._userId user) (P._projectId project)
         found `shouldBe` Just project
-        forOtherUser <- P.findByUserId conn (U.id_ otherUser) (P.id_ project)
+        forOtherUser <- P.findByUserId conn (U._userId otherUser) (P._projectId project)
         forOtherUser `shouldBe` Nothing
-        forOtherProject <- P.findByUserId conn (U.id_ user) (P.id_ otherProject)
+        forOtherProject <- P.findByUserId conn (U._userId user) (P._projectId otherProject)
         forOtherProject `shouldBe` Nothing
 
     it "can find all by user id" $ do
@@ -49,20 +49,20 @@ spec context = describe "Project" $ do
         project1 <- P.create conn "project1" "description"
         _ <- P.create conn "project2" "description"
         project3 <- P.create conn "project3" "description"
-        _ <- P.addUser conn (P.id_ project1) (U.id_ user)
-        _ <- P.addUser conn (P.id_ project3) (U.id_ user)
-        found <- P.allByUserId conn (U.id_ user)
+        _ <- P.addUser conn (P._projectId project1) (U._userId user)
+        _ <- P.addUser conn (P._projectId project3) (U._userId user)
+        found <- P.allByUserId conn (U._userId user)
         found `shouldBe` [project1, project3]
 
     it "can update a project" $ do
         project <- P.create conn "name" "desc"
-        let updated = project {P.name = "new name", P.description = "new desc"}
+        let updated = project {P._projectName = "new name", P._projectDescription = "new desc"}
         _ <- P.update conn updated
-        found <- P.find conn (P.id_ project)
+        found <- P.find conn (P._projectId project)
         found `shouldBe` (Just updated)
 
     it "can delete by id" $ do
         project <- P.create conn "project" "description"
-        _ <- P.delete conn (P.id_ project)
-        found <- P.find conn (P.id_ project)
+        _ <- P.delete conn (P._projectId project)
+        found <- P.find conn (P._projectId project)
         found `shouldBe` Nothing

@@ -65,6 +65,7 @@ executable web
                      , http-client
                      , http-conduit
                      , http-types
+                     , lens
                      , logging
                      , opaleye
                      , postgresql-simple
@@ -133,6 +134,7 @@ test-suite test
                      , http-client
                      , http-conduit
                      , http-types
+                     , lens
                      , logging
                      , network-uri
                      , opaleye

@@ -15,9 +15,12 @@ module User
     , UserColumnRead
     , userIdColumn
     -- * Accessors
-    , id_
-    , name
-    , email
+    , _userId
+    , userId
+    , _userName
+    , userName
+    , _userEmail
+    , userEmail
     -- * Queries
     , runUserFindQuery
     , userQuery
@@ -28,6 +31,7 @@ module User
     ) where
 
 import           Control.Arrow (returnA)
+import           Control.Lens (makeLenses)
 import           Data.Aeson (FromJSON, ToJSON)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
@@ -54,20 +58,21 @@ instance ToValue a => ToValue (UserId' a) where
     toValue (UserId userId) = "/users/" <> toValue userId
 
 data User' a b c = User
-    { id_ :: a
-    , name :: b
-    , email :: c
+    { _userId :: a
+    , _userName :: b
+    , _userEmail :: c
     } deriving (Eq, Show)
 type User = User' UserId Text Text
 type UserColumnWrite = User' UserIdColumnMaybe (Column PGText) (Column PGText)
 type UserColumnRead = User' UserIdColumn (Column PGText) (Column PGText)
 $(makeAdaptorAndInstance "pUser" ''User')
+makeLenses ''User'
 
 usersTable :: Table UserColumnWrite UserColumnRead
 usersTable = Table "users"
-                  (pUser User { id_ = userIdColumn (optional "id")
-                              , name = required "name"
-                              , email = required "email"
+                  (pUser User { _userId = userIdColumn (optional "id")
+                              , _userName = required "name"
+                              , _userEmail = required "email"
                               })
 
 userQuery :: Query UserColumnRead
@@ -77,7 +82,7 @@ runUserFindQuery :: Connection -> Query UserColumnRead -> IO (Maybe User)
 runUserFindQuery = runFindQuery
 
 instance ToValue a => ToValue (User' a b c) where
-    toValue = toValue . id_
+    toValue = toValue . _userId
 
 create :: Connection -> Text -> Text -> IO User
 create conn name' email' = do
@@ -85,19 +90,19 @@ create conn name' email' = do
     return user
 
 findQuery :: UserId -> Query UserColumnRead
-findQuery userId = proc () -> do
+findQuery userId' = proc () -> do
     row <- userQuery -< ()
-    withId userId -< id_ row
+    withId userId' -< _userId row
     returnA -< row
 
 findByName :: Connection -> Text -> IO (Maybe User)
-findByName conn userName = do
-    runFindQuery conn (findByNameQuery userName)
+findByName conn userName' = do
+    runFindQuery conn (findByNameQuery userName')
 
 findByNameQuery :: Text -> Query UserColumnRead
-findByNameQuery userName = proc () -> do
+findByNameQuery userName' = proc () -> do
     row <- userQuery -< ()
-    restrict -< name row .== pgStrictText userName
+    restrict -< _userName row .== pgStrictText userName'
     returnA -< row
 
 update :: Connection -> User -> IO ()
@@ -105,6 +110,6 @@ update conn user = do
     _ <- runUpdate
              conn
              usersTable
-             (\u -> u {id_ = Just <$> id_ u, name = pgStrictText (name user), email = pgStrictText (email user)})
-             (\u -> id_ u .=== (pgInt4 <$> id_ user))
+             (\u -> u {_userId = Just <$> _userId u, _userName = pgStrictText (_userName user), _userEmail = pgStrictText (_userEmail user)})
+             (\u -> _userId u .=== (pgInt4 <$> _userId user))
     return ()

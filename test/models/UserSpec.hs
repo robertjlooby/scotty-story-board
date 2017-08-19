@@ -12,7 +12,7 @@ spec context = describe "User" $ do
     let conn = getDbConn context
     it "can find by id" $ do
         user <- U.create conn "user" "email"
-        found <- U.runUserFindQuery conn $ U.findQuery (U.id_ user)
+        found <- U.runUserFindQuery conn $ U.findQuery (U._userId user)
         found `shouldBe` Just user
 
     it "returns nothing if id not found" $ do
