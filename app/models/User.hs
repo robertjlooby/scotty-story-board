@@ -31,7 +31,7 @@ module User
     ) where
 
 import           Control.Arrow (returnA)
-import           Control.Lens (makeLenses)
+import           Control.Lens ((^.), makeLenses, to)
 import           Data.Aeson (FromJSON, ToJSON)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
@@ -91,9 +91,9 @@ create conn name' email' = do
 
 findQuery :: UserId -> Query UserColumnRead
 findQuery userId' = proc () -> do
-    row <- userQuery -< ()
-    withId userId' -< _userId row
-    returnA -< row
+    user <- userQuery -< ()
+    withId userId' -< user^.userId
+    returnA -< user
 
 findByName :: Connection -> Text -> IO (Maybe User)
 findByName conn userName' = do
@@ -101,15 +101,15 @@ findByName conn userName' = do
 
 findByNameQuery :: Text -> Query UserColumnRead
 findByNameQuery userName' = proc () -> do
-    row <- userQuery -< ()
-    restrict -< _userName row .== pgStrictText userName'
-    returnA -< row
+    user <- userQuery -< ()
+    restrict -< (user^.userName) .== (userName'^.to pgStrictText)
+    returnA -< user
 
 update :: Connection -> User -> IO ()
 update conn user = do
     _ <- runUpdate
              conn
              usersTable
-             (\u -> u {_userId = Just <$> _userId u, _userName = pgStrictText (_userName user), _userEmail = pgStrictText (_userEmail user)})
-             (\u -> _userId u .=== (pgInt4 <$> _userId user))
+             (\u -> u {_userId = Just <$> u^.userId, _userName =  user^.userName.to pgStrictText, _userEmail = user^.userEmail.to pgStrictText})
+             (\u -> u^.userId .=== (pgInt4 <$> user^.userId))
     return ()

@@ -5,6 +5,7 @@ module AuthorizationController
     ( app
     ) where
 
+import           Control.Lens ((^.))
 import           Data.Aeson.Types (FromJSON)
 import           Data.ByteString (ByteString)
 import           Data.Function ((&))
@@ -23,7 +24,7 @@ import qualified AuthViews
 import qualified OAuthLogin
 import           Session (Session(Session), deleteSession, setSession)
 import qualified User
-import           User (User)
+import           User (User, userId)
 import           Util (logError)
 
 googleKey :: HasGoogleApiKeys a => a -> OAuth2
@@ -66,7 +67,7 @@ app appContext = do
         case googleInfoResult of
             Right googleInfo -> do
                 user <- S.liftAndCatchIO $ getOrCreateUser conn googleInfo
-                _ <- setSession . Session $ User._userId user
+                _ <- setSession . Session $ user^.userId
                 S.redirect "/"
             Left errors -> do
                 logError $ show errors
@@ -98,5 +99,5 @@ getOrCreateUser conn googleInfo = do
 createUser :: Connection -> GoogleInfo -> IO User
 createUser conn googleInfo = do
     user <- User.create conn (name googleInfo) $ email googleInfo
-    _ <- OAuthLogin.create conn (User._userId user) "google" $ sub googleInfo
+    _ <- OAuthLogin.create conn (user^.userId) "google" $ sub googleInfo
     return user
