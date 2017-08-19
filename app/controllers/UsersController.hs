@@ -2,8 +2,10 @@
 
 module UsersController where
 
+import           Control.Arrow ((>>>))
 import qualified Data.Text.Lazy as T
 import           Network.HTTP.Types.Status (notFound404)
+import           Opaleye ((.===), keepWhen, pgInt4)
 import qualified Web.Scotty as S
 
 import           AppContext (HasDbConn(..))
@@ -19,7 +21,9 @@ app context = do
         id_ <- S.param "id"
         if userId session == (U.UserId id_)
            then do
-               (Just user) <- S.liftAndCatchIO $ U.runUserFindQuery conn (U.findQuery (userId session))
+               Just user <- S.liftAndCatchIO
+                                $ U.runUserFindQuery conn
+                                $ U.userQuery >>> keepWhen (\user -> (pgInt4 <$> (userId session)) .=== U.id_ user)
                UserViews.edit user
            else do
                S.status notFound404
