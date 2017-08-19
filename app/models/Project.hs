@@ -12,6 +12,7 @@ module Project
     , ProjectId
     -- * Accessors
     , _projectId
+    , projectId
     , _projectName
     , _projectDescription
     -- * Queries
@@ -26,7 +27,7 @@ module Project
     ) where
 
 import           Control.Arrow (returnA)
-import           Control.Lens (makeLenses)
+import           Control.Lens ((^.), makeLenses, to)
 import           Data.Monoid ((<>))
 import           Data.Profunctor.Product (p2)
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
@@ -36,8 +37,7 @@ import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (
 import           Text.Blaze (ToValue, toValue)
 
 import           OpaleyeUtils (runFindQuery, withId)
-import           User (UserId, UserIdColumn, userIdColumn, userQuery)
-import qualified User
+import           User (UserId, UserIdColumn, userId, userIdColumn, userQuery)
 
 newtype ProjectId' a = ProjectId a deriving (Eq, Ord, Show)
 type ProjectId = ProjectId' Int
@@ -89,8 +89,8 @@ create conn name' description' = do
     return project
 
 addUser :: Connection -> ProjectId -> UserId -> IO ()
-addUser conn projectId' userId = do
-    _ <- runInsertMany conn projectsUsersTable [(pgInt4 <$> projectId', pgInt4 <$> userId)]
+addUser conn projectId' userId' = do
+    _ <- runInsertMany conn projectsUsersTable [(pgInt4 <$> projectId', pgInt4 <$> userId')]
     return ()
 
 find :: Connection -> ProjectId -> IO (Maybe Project)
@@ -99,9 +99,9 @@ find conn projectId' = do
 
 findQuery :: ProjectId -> Query ProjectColumnRead
 findQuery projectId' = proc () -> do
-    row <- projectQuery -< ()
-    withId projectId' -< _projectId row
-    returnA -< row
+    project <- projectQuery -< ()
+    withId projectId' -< _projectId project
+    returnA -< project
 
 findByName :: Connection -> Text -> IO (Maybe Project)
 findByName conn projectName' = do
@@ -109,40 +109,40 @@ findByName conn projectName' = do
 
 findByNameQuery :: Text -> Query ProjectColumnRead
 findByNameQuery projectName' = proc () -> do
-    row <- projectQuery -< ()
-    restrict -< _projectName row .== pgStrictText projectName'
-    returnA -< row
+    project <- projectQuery -< ()
+    restrict -< project^.projectName .== pgStrictText projectName'
+    returnA -< project
 
 findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
-findByUserId conn userId projectId' = do
-    runFindQuery conn (findByUserIdQuery userId projectId')
+findByUserId conn userId' projectId' = do
+    runFindQuery conn (findByUserIdQuery userId' projectId')
 
 findByUserIdQuery :: UserId -> ProjectId -> Query ProjectColumnRead
-findByUserIdQuery userId projectId' = proc () -> do
+findByUserIdQuery userId' projectId' = proc () -> do
     user <- userQuery -< ()
     project <- projectQuery -< ()
     (puProjectId, puUserId) <- projectsUsersQuery -< ()
 
-    withId userId -< User._userId user
-    withId userId -< puUserId
-    withId projectId' -< _projectId project
-    restrict -< _projectId project .=== puProjectId
+    withId userId' -< user^.userId
+    withId userId' -< puUserId
+    withId projectId' -< project^.projectId
+    restrict -< project^.projectId .=== puProjectId
 
     returnA -< project
 
 allByUserId :: Connection -> UserId -> IO [Project]
-allByUserId conn userId =
-    runQuery conn (allByUserIdQuery userId)
+allByUserId conn userId' =
+    runQuery conn (allByUserIdQuery userId')
 
 allByUserIdQuery :: UserId -> Query ProjectColumnRead
-allByUserIdQuery userId = proc () -> do
+allByUserIdQuery userId' = proc () -> do
     user <- userQuery -< ()
     project <- projectQuery -< ()
     (puProjectId, puUserId) <- projectsUsersQuery -< ()
 
-    withId userId -< User._userId user
-    withId userId -< puUserId
-    restrict -< _projectId project .=== puProjectId
+    withId userId' -< user^.userId
+    withId userId' -< puUserId
+    restrict -< project^.projectId .=== puProjectId
 
     returnA -< project
 
@@ -151,11 +151,14 @@ update conn project = do
     _ <- runUpdate
              conn
              projectsTable
-             (\p -> p {_projectId = Just <$> _projectId p, _projectName = pgStrictText (_projectName project), _projectDescription = pgStrictText (_projectDescription project)})
-             (\p -> _projectId p .=== (pgInt4 <$> _projectId project))
+             (\p -> p { _projectId = Just <$> p^.projectId
+                      , _projectName = project^.projectName.to pgStrictText
+                      , _projectDescription = project^.projectDescription.to pgStrictText
+                      })
+             (\p -> p^.projectId .=== (pgInt4 <$> project^.projectId))
     return ()
 
 delete :: Connection -> ProjectId -> IO ()
 delete conn projectId' = do
-    _ <- runDelete conn projectsTable (\p -> _projectId p .=== (pgInt4 <$> projectId'))
+    _ <- runDelete conn projectsTable (\p -> p^.projectId .=== (pgInt4 <$> projectId'))
     return ()

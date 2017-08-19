@@ -12,14 +12,14 @@ module OAuthLogin
     ) where
 
 import           Control.Arrow (returnA)
+import           Control.Lens ((^.))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection)
 import           Opaleye (Column, PGText, Query, Table(Table), (.===), (.==), pgInt4, pgStrictText, queryTable, required, restrict, runInsertMany)
 
 import           OpaleyeUtils (runFindQuery)
-import           User (User, UserColumnRead, UserId, UserIdColumn, userIdColumn, userQuery)
-import qualified User
+import           User (User, UserColumnRead, UserId, UserIdColumn, userId, userIdColumn, userQuery)
 
 data OAuthLogin' a b c = OAuthLogin
     { oalUserId :: a
@@ -40,11 +40,11 @@ oAuthLoginQuery :: Query OAuthLoginColumn
 oAuthLoginQuery = queryTable oAuthLoginsTable
 
 create :: Connection -> UserId -> Text -> Text -> IO ()
-create conn userId providerName providerUserId = do
+create conn userId' providerName providerUserId = do
     _ <- runInsertMany
              conn
              oAuthLoginsTable
-             [OAuthLogin (pgInt4 <$> userId) (pgStrictText providerName) (pgStrictText providerUserId)]
+             [OAuthLogin (pgInt4 <$> userId') (pgStrictText providerName) (pgStrictText providerUserId)]
     return ()
 
 findUser :: Connection -> Text -> Text -> IO (Maybe User)
@@ -56,7 +56,7 @@ findUserQuery providerName providerUserId = proc () -> do
     user <- userQuery -< ()
     oAuthLogin <- oAuthLoginQuery -< ()
 
-    restrict -< oalUserId oAuthLogin .=== User._userId user
+    restrict -< oalUserId oAuthLogin .=== user^.userId
     restrict -< oalProviderName oAuthLogin .== pgStrictText providerName
     restrict -< oalProviderUserId oAuthLogin .== pgStrictText providerUserId
 
