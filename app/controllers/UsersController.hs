@@ -34,10 +34,10 @@ app context = do
         email <- S.param "email"
         if _sessionUserId session == U.UserId id_
            then do
-               Just user <- S.liftAndCatchIO
-                                $ U.runUserFindQuery conn
-                                $ U.findQuery $ session^.sessionUserId
-               _ <- S.liftAndCatchIO $ U.update conn $ user {U._userName = name, U._userEmail = email}
+               S.liftAndCatchIO $ do
+                   Just user <- U.runUserFindQuery conn
+                               $ U.findQuery $ session^.sessionUserId
+                   U.update conn $ user {U._userName = name, U._userEmail = email}
                S.redirect $ T.pack ("/users/" ++ show id_ ++ "/edit")
            else do
                S.status notFound404
