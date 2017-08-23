@@ -37,7 +37,7 @@ import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), (.===), (
 import           Text.Blaze (ToValue, toValue)
 
 import           OpaleyeUtils (runFindQuery, withId)
-import           User (UserId, UserIdColumn, userId, userIdColumn, userQuery)
+import           User (UserColumnRead, UserId, UserIdColumn, userId, userIdColumn, userQuery)
 
 newtype ProjectId' a = ProjectId a deriving (Eq, Ord, Show)
 type ProjectId = ProjectId' Int
@@ -80,8 +80,16 @@ projectsUsersTable = Table "projects_users"
                            (p2 ( pProjectId (ProjectId (required "project_id"))
                                , userIdColumn (required "user_id")))
 
-projectsUsersQuery :: Query (ProjectIdColumn, UserIdColumn)
-projectsUsersQuery = queryTable projectsUsersTable
+projectsUsersQuery :: Query (ProjectColumnRead, UserColumnRead)
+projectsUsersQuery = proc () -> do
+    user <- userQuery -< ()
+    project <- projectQuery -< ()
+    (puProjectId, puUserId) <- queryTable projectsUsersTable -< ()
+
+    restrict -< project^.projectId .=== puProjectId
+    restrict -< user^.userId .=== puUserId
+
+    returnA -< (project, user)
 
 create :: Connection -> Text -> Text -> IO Project
 create conn name' description' = do
@@ -119,14 +127,10 @@ findByUserId conn userId' projectId' = do
 
 findByUserIdQuery :: UserId -> ProjectId -> Query ProjectColumnRead
 findByUserIdQuery userId' projectId' = proc () -> do
-    user <- userQuery -< ()
-    project <- projectQuery -< ()
-    (puProjectId, puUserId) <- projectsUsersQuery -< ()
+    (project, user) <- projectsUsersQuery -< ()
 
     withId userId' -< user^.userId
-    withId userId' -< puUserId
     withId projectId' -< project^.projectId
-    restrict -< project^.projectId .=== puProjectId
 
     returnA -< project
 
@@ -136,13 +140,9 @@ allByUserId conn userId' =
 
 allByUserIdQuery :: UserId -> Query ProjectColumnRead
 allByUserIdQuery userId' = proc () -> do
-    user <- userQuery -< ()
-    project <- projectQuery -< ()
-    (puProjectId, puUserId) <- projectsUsersQuery -< ()
+    (project, user) <- projectsUsersQuery -< ()
 
     withId userId' -< user^.userId
-    withId userId' -< puUserId
-    restrict -< project^.projectId .=== puProjectId
 
     returnA -< project
 
