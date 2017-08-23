@@ -80,10 +80,10 @@ spec context = with (S.scottyApp $ app context) $ do
             let request = postHtmlForm' "/projects" [("name", "project"), ("description", "the project")]
             run (withSession session request) `shouldRespondWith` 302
             liftIO $ do
-                found <- P.findByName conn "project"
+                found <- P.runProjectFindQuery conn $ P.findByNameQuery "project"
                 P._projectName <$> found `shouldBe` Just "project"
                 P._projectDescription <$> found `shouldBe` Just "the project"
-                allForUser <- P.allByUserId conn userId
+                allForUser <- P.runProjectQuery conn $ P.allByUserIdQuery userId
                 let (Just project) = found
                 allForUser `shouldBe` [project]
 
@@ -96,7 +96,7 @@ spec context = with (S.scottyApp $ app context) $ do
             run (withSession session request) `shouldRespondWith` 302
 
             liftIO $ do
-                found <- P.find conn (P._projectId project)
+                found <- P.runProjectFindQuery conn $ P.findQuery (P._projectId project)
                 found `shouldBe` (Just $ project {P._projectName = "new name", P._projectDescription = "new desc"})
 
         it "responds with a 404 for a project the user is not linked to" $ do
@@ -107,7 +107,7 @@ spec context = with (S.scottyApp $ app context) $ do
             run (withSession session request) `shouldRespondWith` 404
 
             liftIO $ do
-                found <- P.find conn (P._projectId project)
+                found <- P.runProjectFindQuery conn $ P.findQuery (P._projectId project)
                 found `shouldBe` Just project
 
     describe "DELETE /projects/:id" $ do
@@ -117,7 +117,7 @@ spec context = with (S.scottyApp $ app context) $ do
 
             run (withSession session . delete' $ urlFor project) `shouldRespondWith` 302
             liftIO $ do
-                found <- P.find conn (P._projectId project)
+                found <- P.runProjectFindQuery conn $ P.findQuery (P._projectId project)
                 found `shouldBe` Nothing
 
         it "responds with a 404 for a project the user is not linked to" $ do
@@ -126,7 +126,7 @@ spec context = with (S.scottyApp $ app context) $ do
 
             run (withSession session . delete' $ urlFor project) `shouldRespondWith` 404
             liftIO $ do
-                found <- P.find conn (P._projectId project)
+                found <- P.runProjectFindQuery conn $ P.findQuery (P._projectId project)
                 found `shouldBe` Just project
 
 createUser :: Connection -> WaiSession (U.UserId, Session)

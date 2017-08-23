@@ -26,7 +26,6 @@ module User
     , userQuery
     , create
     , findQuery
-    , findByName
     , update
     ) where
 
@@ -37,7 +36,7 @@ import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection)
-import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), (.==), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runUpdate)
+import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
 import           OpaleyeUtils (runFindQuery, withId)
@@ -93,16 +92,6 @@ findQuery :: UserId -> Query UserColumnRead
 findQuery userId' = proc () -> do
     user <- userQuery -< ()
     withId userId' -< user^.userId
-    returnA -< user
-
-findByName :: Connection -> Text -> IO (Maybe User)
-findByName conn userName' = do
-    runFindQuery conn (findByNameQuery userName')
-
-findByNameQuery :: Text -> Query UserColumnRead
-findByNameQuery userName' = proc () -> do
-    user <- userQuery -< ()
-    restrict -< (user^.userName) .== (userName'^.to pgStrictText)
     returnA -< user
 
 update :: Connection -> User -> IO ()

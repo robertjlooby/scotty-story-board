@@ -22,6 +22,7 @@ import qualified Web.Scotty as S
 import           AppContext (AppContext, HasGoogleApiKeys(..), getDbConn, getHttpManager)
 import qualified AuthViews
 import qualified OAuthLogin
+import           OpaleyeUtils (runFindQuery)
 import           Session (Session(Session), deleteSession, setSession)
 import qualified User
 import           User (User, userId)
@@ -89,7 +90,7 @@ getGoogleInfo appContext code = do
 
 getOrCreateUser :: Connection -> GoogleInfo -> IO User
 getOrCreateUser conn googleInfo = do
-    foundUser <- OAuthLogin.findUser conn "google" $ sub googleInfo
+    foundUser <- runFindQuery conn $ OAuthLogin.findUserQuery "google" (sub googleInfo)
     case foundUser of
       Just user ->
           return user

@@ -14,9 +14,9 @@ spec context = describe "OAuthLogin" $ do
     it "can find user by id and provider" $ do
         user <- U.create conn "user" "email"
         _ <- O.create conn (U._userId user) "google" "12345"
-        found <- O.findUser conn "google" "12345"
+        found <- U.runUserFindQuery conn $ O.findUserQuery "google" "12345"
         found `shouldBe` Just user
 
     it "returns nothing if not found" $ do
-        found <- O.findUser conn "google" "12345"
+        found <- U.runUserFindQuery conn $ O.findUserQuery "google" "12345"
         found `shouldBe` Nothing

@@ -16,11 +16,13 @@ module Project
     , _projectName
     , _projectDescription
     -- * Queries
+    , runProjectQuery
+    , runProjectFindQuery
     , create
-    , find
-    , findByName
-    , findByUserId
-    , allByUserId
+    , findQuery
+    , findByNameQuery
+    , findByUserIdQuery
+    , allByUserIdQuery
     , addUser
     , update
     , delete
@@ -75,6 +77,12 @@ projectsTable = Table "projects"
 projectQuery :: Query ProjectColumnRead
 projectQuery = queryTable projectsTable
 
+runProjectQuery :: Connection -> Query ProjectColumnRead -> IO [Project]
+runProjectQuery = runQuery
+
+runProjectFindQuery :: Connection -> Query ProjectColumnRead -> IO (Maybe Project)
+runProjectFindQuery = runFindQuery
+
 projectsUsersTable :: Table (ProjectIdColumn, UserIdColumn) (ProjectIdColumn, UserIdColumn)
 projectsUsersTable = Table "projects_users"
                            (p2 ( pProjectId (ProjectId (required "project_id"))
@@ -101,29 +109,17 @@ addUser conn projectId' userId' = do
     _ <- runInsertMany conn projectsUsersTable [(pgInt4 <$> projectId', pgInt4 <$> userId')]
     return ()
 
-find :: Connection -> ProjectId -> IO (Maybe Project)
-find conn projectId' = do
-    runFindQuery conn (findQuery projectId')
-
 findQuery :: ProjectId -> Query ProjectColumnRead
 findQuery projectId' = proc () -> do
     project <- projectQuery -< ()
     withId projectId' -< _projectId project
     returnA -< project
 
-findByName :: Connection -> Text -> IO (Maybe Project)
-findByName conn projectName' = do
-    runFindQuery conn (findByNameQuery projectName')
-
 findByNameQuery :: Text -> Query ProjectColumnRead
 findByNameQuery projectName' = proc () -> do
     project <- projectQuery -< ()
     restrict -< project^.projectName .== pgStrictText projectName'
     returnA -< project
-
-findByUserId :: Connection -> UserId -> ProjectId -> IO (Maybe Project)
-findByUserId conn userId' projectId' = do
-    runFindQuery conn (findByUserIdQuery userId' projectId')
 
 findByUserIdQuery :: UserId -> ProjectId -> Query ProjectColumnRead
 findByUserIdQuery userId' projectId' = proc () -> do
@@ -133,10 +129,6 @@ findByUserIdQuery userId' projectId' = proc () -> do
     withId projectId' -< project^.projectId
 
     returnA -< project
-
-allByUserId :: Connection -> UserId -> IO [Project]
-allByUserId conn userId' =
-    runQuery conn (allByUserIdQuery userId')
 
 allByUserIdQuery :: UserId -> Query ProjectColumnRead
 allByUserIdQuery userId' = proc () -> do
