@@ -18,12 +18,3 @@ spec context = describe "User" $ do
     it "returns nothing if id not found" $ do
         found <- U.runUserFindQuery conn $ U.findQuery (U.UserId 0)
         found `shouldBe` Nothing
-
-    it "can find by name" $ do
-        user <- U.create conn "user" "email"
-        found <- U.findByName conn "user"
-        found `shouldBe` Just user
-
-    it "returns nothing if name not found" $ do
-        found <- U.findByName conn "user"
-        found `shouldBe` Nothing

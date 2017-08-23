@@ -8,7 +8,7 @@ module OAuthLogin
     (
     -- * Queries
       create
-    , findUser
+    , findUserQuery
     ) where
 
 import           Control.Arrow (returnA)
@@ -18,8 +18,7 @@ import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection)
 import           Opaleye (Column, PGText, Query, Table(Table), (.===), (.==), pgInt4, pgStrictText, queryTable, required, restrict, runInsertMany)
 
-import           OpaleyeUtils (runFindQuery)
-import           User (User, UserColumnRead, UserId, UserIdColumn, userId, userIdColumn, userQuery)
+import           User (UserColumnRead, UserId, UserIdColumn, userId, userIdColumn, userQuery)
 
 data OAuthLogin' a b c = OAuthLogin
     { oalUserId :: a
@@ -46,10 +45,6 @@ create conn userId' providerName providerUserId = do
              oAuthLoginsTable
              [OAuthLogin (pgInt4 <$> userId') (pgStrictText providerName) (pgStrictText providerUserId)]
     return ()
-
-findUser :: Connection -> Text -> Text -> IO (Maybe User)
-findUser conn providerName providerUserId = do
-    runFindQuery conn (findUserQuery providerName providerUserId)
 
 findUserQuery :: Text -> Text -> Query UserColumnRead
 findUserQuery providerName providerUserId = proc () -> do
