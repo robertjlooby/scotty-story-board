@@ -48,14 +48,14 @@ type UserIdColumn = UserId' (Column PGInt4)
 type UserIdColumnMaybe = UserId' (Maybe (Column PGInt4))
 $(makeAdaptorAndInstance "pUserId" ''UserId')
 
-userIdColumn :: TableProperties a b -> TableProperties (UserId' a) (UserId' b)
-userIdColumn tableProperties = pUserId (UserId tableProperties)
-
 instance Functor UserId' where
     fmap f (UserId a) = UserId (f a)
 
 instance ToValue a => ToValue (UserId' a) where
     toValue (UserId userId) = "/users/" <> toValue userId
+
+userIdColumn :: TableProperties a b -> TableProperties (UserId' a) (UserId' b)
+userIdColumn tableProperties = pUserId (UserId tableProperties)
 
 data User' a b c = User
     { _userId :: a
@@ -67,6 +67,9 @@ type UserColumnWrite = User' UserIdColumnMaybe (Column PGText) (Column PGText)
 type UserColumnRead = User' UserIdColumn (Column PGText) (Column PGText)
 $(makeAdaptorAndInstance "pUser" ''User')
 makeLenses ''User'
+
+instance ToValue a => ToValue (User' a b c) where
+    toValue = toValue . _userId
 
 usersTable :: Table UserColumnWrite UserColumnRead
 usersTable = Table "users"
@@ -80,9 +83,6 @@ userQuery = queryTable usersTable
 
 runUserFindQuery :: Connection -> Query UserColumnRead -> IO (Maybe User)
 runUserFindQuery = runFindQuery
-
-instance ToValue a => ToValue (User' a b c) where
-    toValue = toValue . _userId
 
 create :: Connection -> Text -> Text -> IO User
 create conn name' email' = do
