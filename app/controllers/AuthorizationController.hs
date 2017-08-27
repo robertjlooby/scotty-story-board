@@ -21,6 +21,7 @@ import qualified Web.Scotty as S
 
 import           AppContext (AppContext, HasGoogleApiKeys(..), getDbConn, getHttpManager)
 import qualified AuthViews
+import           GithubOAuth (getGithubLoginUrl, getGithubInfo, getOrCreateGithubUser)
 import qualified OAuthLogin
 import           OpaleyeUtils (runFindQuery)
 import           Session (Session(Session), deleteSession, setSession)
@@ -56,11 +57,23 @@ app :: AppContext -> S.ScottyM ()
 app appContext = do
     let conn = getDbConn appContext
     S.get "/login" $ do
-        AuthViews.login $ getGoogleLoginUrl appContext
+        AuthViews.login (getGoogleLoginUrl appContext) (getGithubLoginUrl appContext)
 
     S.get "/logout" $ do
         _ <- deleteSession
         S.redirect "/login"
+
+    S.get "/oauth/github" $ do
+        code <- S.param "code"
+        githubInfoResult <- S.liftAndCatchIO $ getGithubInfo appContext code
+        case githubInfoResult of
+            Right githubInfo -> do
+                user <- S.liftAndCatchIO $ getOrCreateGithubUser conn githubInfo
+                _ <- setSession . Session $ user^.userId
+                S.redirect "/"
+            Left errors -> do
+                logError $ show errors
+                S.redirect "/"
 
     S.get "/oauth/google" $ do
         code <- S.param "code"

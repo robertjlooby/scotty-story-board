@@ -36,7 +36,7 @@ import           Data.Monoid ((<>))
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection)
-import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), optional, pgInt4, pgStrictText, queryTable, required, restrict, runInsertManyReturning, runUpdate)
+import           Opaleye (Column, PGInt4, PGText, Query, Table(Table), TableProperties, (.===), optional, pgInt4, pgStrictText, queryTable, required, runInsertManyReturning, runUpdate)
 import           Text.Blaze (ToValue, toValue)
 
 import           OpaleyeUtils (runFindQuery, withId)

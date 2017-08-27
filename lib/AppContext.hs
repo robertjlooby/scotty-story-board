@@ -2,6 +2,7 @@ module AppContext
     ( AppContext
     , HasDbConn(..)
     , HasEnvironment(..)
+    , HasGithubApiKeys(..)
     , HasGoogleApiKeys(..)
     , HasHttpManager(..)
     , HasPort(..)
@@ -22,6 +23,12 @@ data AppContext = AppContext
     { environment :: String
     , port :: Int
     , dbConn :: Connection
+    , githubClientId :: BS8.ByteString
+    , githubClientSecret :: BS8.ByteString
+    , githubAccessTokenUri :: URI
+    , githubOAuthUri :: URI
+    , githubRedirectUri :: URI
+    , githubUsersUri :: URI
     , googleClientId :: BS8.ByteString
     , googleClientSecret :: BS8.ByteString
     , googleAccessTokenUri :: URI
@@ -42,6 +49,21 @@ class HasEnvironment a where
     getEnvironment :: a -> String
 instance HasEnvironment AppContext where
     getEnvironment = environment
+
+class HasGithubApiKeys a where
+    getGithubClientId :: a -> BS8.ByteString
+    getGithubClientSecret :: a -> BS8.ByteString
+    getGithubAccessTokenUri :: a -> URI
+    getGithubOAuthUri :: a -> URI
+    getGithubRedirectUri :: a -> URI
+    getGithubUsersUri :: a -> URI
+instance HasGithubApiKeys AppContext where
+    getGithubClientId = githubClientId
+    getGithubClientSecret = githubClientSecret
+    getGithubAccessTokenUri = githubAccessTokenUri
+    getGithubOAuthUri = githubOAuthUri
+    getGithubRedirectUri = githubRedirectUri
+    getGithubUsersUri = githubUsersUri
 
 class HasGoogleApiKeys a where
     getGoogleClientId :: a -> BS8.ByteString
@@ -80,6 +102,12 @@ getContext defaultEnv = do
         <$> getEnv "APP_ENV"
         <*> (read <$> getEnv "PORT")
         <*> (BS8.pack <$> getEnv "DATABASE_URL" >>= connectPostgreSQL)
+        <*> (BS8.pack <$> getEnv "GITHUB_CLIENT_ID")
+        <*> (BS8.pack <$> getEnv "GITHUB_CLIENT_SECRET")
+        <*> getUri "GITHUB_ACCESS_TOKEN_URI"
+        <*> getUri "GITHUB_OAUTH_URI"
+        <*> getUri "GITHUB_REDIRECT_URI"
+        <*> getUri "GITHUB_USERS_URI"
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_ID")
         <*> (BS8.pack <$> getEnv "GOOGLE_CLIENT_SECRET")
         <*> getUri "GOOGLE_ACCESS_TOKEN_URI"

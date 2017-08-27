@@ -9,10 +9,11 @@ import qualified Web.Scotty as S
 
 import qualified Layouts
 
-login :: ByteString -> S.ActionM ()
-login googleLoginUrl = Layouts.app $ do
+login :: ByteString -> ByteString -> S.ActionM ()
+login googleLoginUrl githubLoginUrl = Layouts.app $ do
     H.div ! class_ "container" $ do
         H.div ! class_ "row" $ do
             H.div ! class_ "six columns" $ do
                 h2 "Login"
                 p . (a ! (href . unsafeByteStringValue $ googleLoginUrl)) $ "Login with Google"
+                p . (a ! (href . unsafeByteStringValue $ githubLoginUrl)) $ "Login with GitHub"
