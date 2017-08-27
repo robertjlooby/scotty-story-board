@@ -38,6 +38,7 @@ executable web
                      , AuthorizationController
                      , AuthViews
                      , ErrorViews
+                     , GithubOAuth
                      , IndexController
                      , IndexViews
                      , Layouts
@@ -96,6 +97,7 @@ test-suite test
                      , AuthorizationController
                      , AuthViews
                      , ErrorViews
+                     , GithubOAuth
                      , Helpers
                      , IndexController
                      , IndexControllerSpec
